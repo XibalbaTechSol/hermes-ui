@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-obsidian: #0D0D0D;
+  --accent-orange: #FF5F00;
+  --text-silver: #E0E0E0;
+  --text-dim: #555555;
+  --border-steel: #222222;
+  --panel-bg: #141414;
+}
+
+body {
+  background-color: var(--bg-obsidian);
+  color: var(--text-silver);
+  font-family: 'IBM Plex Sans', sans-serif;
+  margin: 0;
+  overflow: hidden;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Industrial Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-obsidian);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-steel);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-orange);
+}
+
+.industrial-panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border-steel);
+  position: relative;
+}
+
+.industrial-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--accent-orange);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.industrial-panel:hover::before {
+  opacity: 1;
+}
+
+.glow-text {
+  text-shadow: 0 0 10px rgba(255, 95, 0, 0.4);
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scanline {
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 95, 0, 0.05);
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  animation: scanline 8s linear infinite;
+}
