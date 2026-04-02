@@ -77,17 +77,53 @@ const parseMarkdown = (content) => {
 app.get('/api/usage', (req, res) => {
   try {
     const sessionsPath = path.join(HERMES_DIR, 'sessions');
-    if (!fs.existsSync(sessionsPath)) return res.json({ total_tokens: 0, total_cost: 0 });
+    if (!fs.existsSync(sessionsPath)) return res.json({ total_tokens: 0, total_cost: 0, sessions: [] });
     const files = fs.readdirSync(sessionsPath).filter(f => f.startsWith('session_') && f.endsWith('.json'));
     let totalTokens = 0; let totalCost = 0;
+    const sessionUsage = [];
+
     files.forEach(file => {
       try {
         const data = JSON.parse(fs.readFileSync(path.join(sessionsPath, file), 'utf-8'));
-        if (data.usage) { totalTokens += data.usage.total_tokens || 0; totalCost += data.usage.total_cost || 0; }
-        else if (data.messages) { data.messages.forEach(m => { if (m.usage) { totalTokens += m.usage.total_tokens || 0; totalCost += m.usage.total_cost || 0; } }); }
+        let sessionTokens = 0;
+        let sessionCost = 0;
+
+        if (data.usage) { 
+          sessionTokens = data.usage.total_tokens || 0; 
+          sessionCost = data.usage.total_cost || 0; 
+        } else if (data.messages) { 
+          data.messages.forEach(m => { 
+            if (m.usage) { 
+              sessionTokens += m.usage.total_tokens || 0; 
+              sessionCost += m.usage.total_cost || 0; 
+            } 
+          }); 
+        }
+
+        totalTokens += sessionTokens;
+        totalCost += sessionCost;
+
+        if (sessionTokens > 0) {
+          sessionUsage.push({
+            id: data.session_id,
+            title: data.title || `Session ${data.session_id.substring(0, 8)}`,
+            tokens: sessionTokens,
+            cost: sessionCost.toFixed(4),
+            time: new Date(data.last_updated || data.session_start).toLocaleTimeString()
+          });
+        }
       } catch (e) {}
     });
-    res.json({ total_tokens: totalTokens, total_cost: totalCost.toFixed(4), currency: 'USD' });
+
+    // Sort by most active/recent
+    sessionUsage.sort((a, b) => b.tokens - a.tokens);
+
+    res.json({ 
+      total_tokens: totalTokens, 
+      total_cost: totalCost.toFixed(4), 
+      currency: 'USD',
+      sessions: sessionUsage.slice(0, 5) 
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -236,15 +272,18 @@ const stripAnsi = (str) => {
 };
 
 app.post('/api/chat/sessions/:id/messages', async (req, res) => {
-  const sessionId = req.params.id;
+  const fullSessionId = req.params.id;
   const userMessage = req.body.message;
   
-  console.log(`[CHAT] Session ${sessionId}: Processing message...`);
+  // Strip 'session_' prefix for CLI if present
+  const cliSessionId = fullSessionId.startsWith('session_') ? fullSessionId.replace('session_', '') : fullSessionId;
+  
+  console.log(`[CHAT] Session ${fullSessionId} (CLI ID: ${cliSessionId}): Processing...`);
 
   try {
     const hermesProcess = spawn('/home/xibalba/.local/bin/hermes', [
       'chat',
-      '--resume', sessionId,
+      '--resume', cliSessionId,
       '-q', userMessage,
       '--yolo'
     ]);
@@ -269,16 +308,29 @@ app.post('/api/chat/sessions/:id/messages', async (req, res) => {
       return res.status(500).json({ error: `Hermes CLI failed: ${stripAnsi(stderr) || 'Unknown error'}` });
     }
 
-    // Read the updated session file
-    const sessionPath = path.join(HERMES_DIR, 'sessions', `session_${sessionId}.json`);
+    // Read the updated session file - try both prefixed and non-prefixed
+    const sessionsDir = path.join(HERMES_DIR, 'sessions');
+    let sessionPath = path.join(sessionsDir, `session_${fullSessionId}.json`);
+    
     if (!fs.existsSync(sessionPath)) {
-      return res.status(404).json({ error: 'Session file not found after processing' });
+      // If fullSessionId already includes 'session_', this avoids 'session_session_'
+      sessionPath = path.join(sessionsDir, fullSessionId.startsWith('session_') ? `${fullSessionId}.json` : `session_${fullSessionId}.json`);
+    }
+    
+    if (!fs.existsSync(sessionPath)) {
+      sessionPath = path.join(sessionsDir, `${fullSessionId}.json`);
+    }
+
+    console.log(`[CHAT] Reading session from: ${sessionPath}`);
+    
+    if (!fs.existsSync(sessionPath)) {
+      return res.status(404).json({ error: `Session file not found: ${sessionPath}` });
     }
 
     const sessionData = JSON.parse(fs.readFileSync(sessionPath, 'utf-8'));
     res.json({ response: stripAnsi(stdout), session: sessionData });
     
-    console.log(`[CHAT] Session ${sessionId}: Completed successfully.`);
+    console.log(`[CHAT] Session ${sessionId}: Completed. Messages: ${sessionData.messages?.length || 0}`);
   } catch (err) { 
     console.error(`[CHAT] Error processing message for session ${sessionId}:`, err);
     res.status(500).json({ error: err.message }); 
@@ -286,26 +338,27 @@ app.post('/api/chat/sessions/:id/messages', async (req, res) => {
 });
 
 app.post('/api/chat/sessions', async (req, res) => {
-  const tempId = `session_${Date.now()}`;
-  console.log(`[CHAT] Creating new session: ${tempId}`);
+  const rawId = `${Date.now()}`;
+  console.log(`[CHAT] Creating new session: ${rawId}`);
   try {
     const sessionsDir = path.join(HERMES_DIR, 'sessions');
-    const sessionPath = path.join(sessionsDir, `session_${tempId}.json`);
+    const sessionPath = path.join(sessionsDir, `session_${rawId}.json`);
     
     if (!fs.existsSync(sessionsDir)) {
       fs.mkdirSync(sessionsDir, { recursive: true });
     }
 
     const emptySession = {
-      session_id: tempId,
+      session_id: rawId,
       session_start: new Date().toISOString(),
       messages: []
     };
 
     fs.writeFileSync(sessionPath, JSON.stringify(emptySession, null, 2));
     
+    const sessionId = `session_${rawId}`;
     console.log(`[CHAT] Created session file: ${sessionPath}`);
-    res.json({ session_id: tempId });
+    res.json({ session_id: sessionId });
   } catch (err) { 
     console.error('[CHAT] Error in POST /api/chat/sessions:', err);
     res.status(500).json({ error: err.message }); 
