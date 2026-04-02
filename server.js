@@ -3,14 +3,18 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import yaml from 'js-yaml';
 
 const execAsync = promisify(exec);
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 const HERMES_DIR = '/home/xibalba/.hermes';
@@ -223,24 +227,87 @@ app.get('/api/chat/sessions/:id', (req, res) => {
   }
 });
 
+const stripAnsi = (str) => {
+  const pattern = [
+    '[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*|[a-zA-Z\\d\\/#&.:=?%@~_]*)[\\u0007\\u001B\\u009C])',
+    '(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))'
+  ].join('|');
+  return str.replace(new RegExp(pattern, 'g'), '');
+};
+
 app.post('/api/chat/sessions/:id/messages', async (req, res) => {
+  const sessionId = req.params.id;
+  const userMessage = req.body.message;
+  
+  console.log(`[CHAT] Session ${sessionId}: Processing message...`);
+
   try {
-    const { stdout } = await execAsync(`/home/xibalba/.local/bin/hermes chat --resume ${req.params.id} -q "${req.body.message.replace(/"/g, '\\"')}" --yolo`);
-    res.json({ response: stdout, session: JSON.parse(fs.readFileSync(path.join(HERMES_DIR, 'sessions', `session_${req.params.id}.json`), 'utf-8')) });
+    const hermesProcess = spawn('/home/xibalba/.local/bin/hermes', [
+      'chat',
+      '--resume', sessionId,
+      '-q', userMessage,
+      '--yolo'
+    ]);
+
+    let stdout = '';
+    let stderr = '';
+
+    hermesProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    hermesProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    const exitCode = await new Promise((resolve) => {
+      hermesProcess.on('close', resolve);
+    });
+
+    if (exitCode !== 0) {
+      console.error(`[CHAT] Hermes CLI failed (code ${exitCode}): ${stderr}`);
+      return res.status(500).json({ error: `Hermes CLI failed: ${stripAnsi(stderr) || 'Unknown error'}` });
+    }
+
+    // Read the updated session file
+    const sessionPath = path.join(HERMES_DIR, 'sessions', `session_${sessionId}.json`);
+    if (!fs.existsSync(sessionPath)) {
+      return res.status(404).json({ error: 'Session file not found after processing' });
+    }
+
+    const sessionData = JSON.parse(fs.readFileSync(sessionPath, 'utf-8'));
+    res.json({ response: stripAnsi(stdout), session: sessionData });
+    
+    console.log(`[CHAT] Session ${sessionId}: Completed successfully.`);
   } catch (err) { 
-    console.error(`POST /api/chat/sessions/${req.params.id}/messages error:`, err);
+    console.error(`[CHAT] Error processing message for session ${sessionId}:`, err);
     res.status(500).json({ error: err.message }); 
   }
 });
 
 app.post('/api/chat/sessions', async (req, res) => {
+  const tempId = `session_${Date.now()}`;
+  console.log(`[CHAT] Creating new session: ${tempId}`);
   try {
-    await execAsync(`/home/xibalba/.local/bin/hermes chat -q "Initialize session" --yolo`);
-    const files = fs.readdirSync(path.join(HERMES_DIR, 'sessions')).filter(f => f.startsWith('session_') && f.endsWith('.json'));
-    const newest = files.map(f => ({ name: f, time: fs.statSync(path.join(HERMES_DIR, 'sessions', f)).mtime.getTime() })).sort((a, b) => b.time - a.time)[0];
-    res.json({ session_id: newest.name.replace('session_', '').replace('.json', '') });
+    const sessionsDir = path.join(HERMES_DIR, 'sessions');
+    const sessionPath = path.join(sessionsDir, `session_${tempId}.json`);
+    
+    if (!fs.existsSync(sessionsDir)) {
+      fs.mkdirSync(sessionsDir, { recursive: true });
+    }
+
+    const emptySession = {
+      session_id: tempId,
+      session_start: new Date().toISOString(),
+      messages: []
+    };
+
+    fs.writeFileSync(sessionPath, JSON.stringify(emptySession, null, 2));
+    
+    console.log(`[CHAT] Created session file: ${sessionPath}`);
+    res.json({ session_id: tempId });
   } catch (err) { 
-    console.error('POST /api/chat/sessions error:', err);
+    console.error('[CHAT] Error in POST /api/chat/sessions:', err);
     res.status(500).json({ error: err.message }); 
   }
 });

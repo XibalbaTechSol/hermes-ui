@@ -18,6 +18,9 @@ import {
   History
 } from 'lucide-react';
 
+const API_BASE = `http://${window.location.hostname}:3008/api`;
+(window as any).API_BASE = API_BASE;
+
 const ChatView: React.FC = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -49,25 +52,27 @@ const ChatView: React.FC = () => {
 
   const fetchSessions = () => {
     setLoading(true);
-    fetch('http://localhost:3008/api/chat/sessions')
+    fetch(`${API_BASE}/chat/sessions`)
       .then(res => res.json())
       .then(data => {
         setSessions(data.sessions || []);
         setLoading(false);
       })
       .catch(err => {
-        console.error(err);
+        console.error('Fetch sessions failed:', err);
         setLoading(false);
       });
   };
 
   const fetchMessages = (sessionId: string) => {
-    fetch(`http://localhost:3008/api/chat/sessions/${sessionId}`)
+    fetch(`${API_BASE}/chat/sessions/${sessionId}`)
       .then(res => res.json())
       .then(data => {
-        setMessages(data.messages || []);
+        if (data.messages) {
+          setMessages(data.messages);
+        }
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error('Fetch messages failed:', err));
   };
 
   useEffect(() => {
@@ -89,7 +94,6 @@ const ChatView: React.FC = () => {
     setSending(true);
     setInput('');
     
-    // Reset height immediately
     if (textareaRef.current) {
       textareaRef.current.style.height = 'inherit';
     }
@@ -99,14 +103,21 @@ const ChatView: React.FC = () => {
       content: userMsg, 
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
     };
+    
     setMessages(prev => [...prev, tempMsg]);
 
-    fetch(`http://localhost:3008/api/chat/sessions/${activeSessionId}/messages`, {
+    fetch(`${API_BASE}/chat/sessions/${activeSessionId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: userMsg })
     })
-    .then(res => res.json())
+    .then(async res => {
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server returned ${res.status}`);
+      }
+      return res.json();
+    })
     .then(data => {
       setSending(false);
       if (data.session && data.session.messages) {
@@ -116,22 +127,61 @@ const ChatView: React.FC = () => {
     })
     .catch(err => {
       setSending(false);
-      console.error(err);
+      setInput(userMsg);
+      console.error('Failed to send message:', err);
+      
+      const errMsg = {
+        role: 'system',
+        content: `Error: ${err.message}. Connection interrupted.`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errMsg]);
     });
+  };
+
+  const handleSuggestion = (text: string) => {
+    if (activeSessionId) {
+      setInput(text);
+      setTimeout(() => {
+        if (textareaRef.current) textareaRef.current.focus();
+      }, 50);
+    } else {
+      setLoading(true);
+      fetch(`${API_BASE}/chat/sessions`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          setMessages([]);
+          setActiveSessionId(data.session_id);
+          setInput(text);
+          fetchSessions();
+          setLoading(false);
+          setTimeout(() => {
+            if (textareaRef.current) textareaRef.current.focus();
+          }, 100);
+        })
+        .catch(err => {
+          setLoading(false);
+          console.error('Suggestion creation failed:', err);
+          alert(`Neural Link failed: ${err.message}`);
+        });
+    }
   };
 
   const handleNewSession = () => {
     setLoading(true);
-    fetch('http://localhost:3008/api/chat/sessions', { method: 'POST' })
+    fetch(`${API_BASE}/chat/sessions`, { method: 'POST' })
       .then(res => res.json())
       .then(data => {
-        setLoading(false);
+        setMessages([]);
         setActiveSessionId(data.session_id);
+        setInput('');
         fetchSessions();
+        setLoading(false);
       })
       .catch(err => {
         setLoading(false);
-        console.error(err);
+        console.error('New session failed:', err);
+        alert('Failed to create new neural session.');
       });
   };
 
@@ -139,15 +189,16 @@ const ChatView: React.FC = () => {
     e.stopPropagation();
     if (!confirm('Are you sure you want to delete this conversation?')) return;
     
-    fetch(`http://localhost:3008/api/chat/sessions/${id}`, { method: 'DELETE' })
+    fetch(`${API_BASE}/chat/sessions/${id}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(() => {
         if (activeSessionId === id) {
           setActiveSessionId(null);
+          setMessages([]);
         }
         fetchSessions();
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error('Delete session failed:', err));
   };
 
   const filteredSessions = sessions.filter(s => 
@@ -156,13 +207,18 @@ const ChatView: React.FC = () => {
   );
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[#0d0d0d] text-[#ececec]">
+    <div 
+      className="flex h-full w-full overflow-hidden bg-[#0d0d0d] text-[#ececec]" 
+      data-testid="chat-view-container"
+      data-active-session={activeSessionId || ''}
+    >
       {/* SIDEBAR */}
-      <div className="w-[260px] bg-[#111111] border-r border-[#222222] flex flex-col transition-all duration-300">
+      <div className="w-[260px] bg-[#111111] border-r border-[#222222] flex flex-col transition-all duration-300" data-testid="chat-sidebar">
         <div className="p-3">
           <button 
             onClick={handleNewSession}
             title="New Session"
+            data-testid="sidebar-new-convo-btn"
             className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg border border-[#222222] hover:bg-[#1a1a1a] transition-colors group"
           >
             <Plus className="w-4 h-4 text-[#FF4D00] group-hover:scale-110 transition-transform" />
@@ -178,19 +234,20 @@ const ChatView: React.FC = () => {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Search conversations..."
+              data-testid="session-search-input"
               className="w-full bg-[#111111] border border-[#222222] pl-8 pr-3 py-1.5 text-[11px] rounded-md outline-none focus:border-[#FF4D00]/50 transition-colors"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar py-2">
+        <div className="flex-1 overflow-y-auto no-scrollbar py-2" data-testid="session-list">
           <div className="px-4 py-2 text-[9px] font-bold text-[#444444] uppercase tracking-widest flex items-center gap-2">
             <History className="w-3 h-3" />
             Conversation History
           </div>
           
           {loading && sessions.length === 0 && (
-            <div className="px-4 py-8 text-center animate-pulse">
+            <div className="px-4 py-8 text-center animate-pulse" data-testid="session-loading">
               <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#FF4D00]/40 mb-2" />
               <div className="text-[10px] text-[#444444] font-bold uppercase tracking-widest">Neural Link Syncing</div>
             </div>
@@ -199,6 +256,7 @@ const ChatView: React.FC = () => {
           {filteredSessions.map(s => (
             <SessionItem 
               key={s.id}
+              id={s.id}
               active={activeSessionId === s.id} 
               name={s.name || `Session ${s.id.substring(0, 8)}`} 
               time={s.time}
@@ -222,7 +280,7 @@ const ChatView: React.FC = () => {
       </div>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex-1 flex flex-col relative bg-[#080808]">
+      <div className="flex-1 flex flex-col relative bg-[#080808]" data-testid="chat-main-area">
         <div className="h-14 border-b border-[#222222]/50 flex items-center px-6 justify-between bg-[#080808]/80 backdrop-blur-md z-20">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-[#1a1a1a] rounded flex items-center justify-center text-[#FF4D00] border border-[#FF4D00]/20">
@@ -230,7 +288,7 @@ const ChatView: React.FC = () => {
             </div>
             <div>
               <div className="text-sm font-bold tracking-tight">HERMES CORE</div>
-              <div className="text-[9px] text-[#00FF41] font-mono uppercase tracking-widest">
+              <div className="text-[9px] text-[#00FF41] font-mono uppercase tracking-widest" data-testid="connection-status">
                 {activeSessionId ? 'Neural Connection established' : 'Awaiting initialization'}
               </div>
             </div>
@@ -238,6 +296,7 @@ const ChatView: React.FC = () => {
           <div className="flex items-center gap-2">
              <button 
                onClick={fetchSessions}
+               data-testid="refresh-sessions-btn"
                className="p-2 text-[#444444] hover:text-[#FF4D00] transition-colors rounded-lg"
                title="Refresh Neural Stream"
              >
@@ -247,9 +306,9 @@ const ChatView: React.FC = () => {
         </div>
 
         {/* Message Feed */}
-        <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
+        <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth" data-testid="message-feed">
           {!activeSessionId ? (
-            <div className="h-full flex flex-col items-center justify-center p-10 max-w-2xl mx-auto text-center space-y-10 animate-in fade-in duration-700">
+            <div className="h-full flex flex-col items-center justify-center p-10 max-w-2xl mx-auto text-center space-y-10 animate-in fade-in duration-700" data-testid="dashboard-suggestions">
               <div className="w-20 h-20 bg-gradient-to-b from-[#1a1a1a] to-[#000000] border border-[#333333] rounded-[2rem] flex items-center justify-center text-4xl font-black text-[#FF4D00] shadow-[0_20px_50px_rgba(255,77,0,0.1)] mb-4 ring-1 ring-[#FF4D00]/20">
                 H
               </div>
@@ -258,25 +317,45 @@ const ChatView: React.FC = () => {
                 <p className="text-xs text-[#555555] font-bold leading-relaxed uppercase tracking-[0.4em]">Integrated Sovereign Agent Interface</p>
               </div>
               <div className="grid grid-cols-2 gap-4 w-full">
-                <HeroAction label="Run Neural Diagnostic" icon={<Cpu className="w-4 h-4" />} />
-                <HeroAction label="Sync Agency Logic" icon={<Brain className="w-4 h-4" />} />
-                <HeroAction label="Execute Protocol Link" icon={<Terminal className="w-4 h-4" />} />
-                <HeroAction label="New Conversation" onClick={handleNewSession} icon={<Plus className="w-4 h-4" />} />
+                <HeroAction 
+                  label="Run Neural Diagnostic" 
+                  icon={<Cpu className="w-4 h-4" />} 
+                  data-testid="suggestion-diagnostic"
+                  onClick={() => handleSuggestion("Run a neural diagnostic on the system and check for any anomalies or pending tasks.")}
+                />
+                <HeroAction 
+                  label="Sync Agency Logic" 
+                  icon={<Brain className="w-4 h-4" />} 
+                  data-testid="suggestion-sync"
+                  onClick={() => handleSuggestion("Synchronize agency logic across all sub-agents and update the SOUL.md if necessary.")}
+                />
+                <HeroAction 
+                  label="Execute Protocol Link" 
+                  icon={<Terminal className="w-4 h-4" />} 
+                  data-testid="suggestion-protocol"
+                  onClick={() => handleSuggestion("Establish a new protocol link via MCP and list available tools.")}
+                />
+                <HeroAction 
+                  label="New Conversation" 
+                  onClick={handleNewSession} 
+                  icon={<Plus className="w-4 h-4" />} 
+                  data-testid="dashboard-new-convo-btn" 
+                />
               </div>
             </div>
           ) : (
             <div className="max-w-3xl mx-auto w-full pt-10 pb-48 px-6">
               {messages.length === 0 && (
-                <div className="text-center py-20 opacity-20">
+                <div className="text-center py-20 opacity-20" data-testid="empty-state">
                   <MessageSquare className="w-12 h-12 mx-auto mb-4" />
                   <div className="text-xs font-bold uppercase tracking-[0.3em]">Channel Cleared • Trace Ready</div>
                 </div>
               )}
               {messages.map((m, idx) => (
-                <ChatMessage key={idx} role={m.role} content={m.content} time={m.time} />
+                <ChatMessage key={idx} role={m.role} content={m.content} time={m.time} index={idx} />
               ))}
               {sending && (
-                <div className="flex gap-6 py-8 animate-in fade-in slide-in-from-bottom-2 duration-300 chat-sending-indicator">
+                <div className="flex gap-6 py-8 animate-in fade-in slide-in-from-bottom-2 duration-300" data-testid="sending-indicator">
                   <div className="w-8 h-8 rounded-lg bg-[#1a1a1a] border border-[#333333] flex items-center justify-center text-[#FF4D00] shrink-0 shadow-lg ring-1 ring-[#FF4D00]/10">
                     <Bot className="w-4 h-4" />
                   </div>
@@ -297,7 +376,7 @@ const ChatView: React.FC = () => {
         {/* Floating Input Area */}
         <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d] to-transparent pt-20 pb-8 px-6 z-30 pointer-events-none">
           <div className="max-w-3xl mx-auto w-full pointer-events-auto">
-            <div className="bg-[#1a1a1a] border border-[#333333] rounded-2xl p-2 shadow-[0_10px_40px_rgba(0,0,0,0.5)] focus-within:border-[#FF4D00]/40 transition-all ring-1 ring-[#FF4D00]/5">
+            <div className="bg-[#1a1a1a] border border-[#333333] rounded-2xl p-2 shadow-[0_10px_40px_rgba(0,0,0,0.5)] focus-within:border-[#FF4D00]/40 transition-all ring-1 ring-[#FF4D00]/5" data-testid="input-container">
               <div className="flex flex-col">
                 <textarea 
                   ref={textareaRef}
@@ -311,6 +390,7 @@ const ChatView: React.FC = () => {
                   }}
                   placeholder={activeSessionId ? "Awaiting commands..." : "Select or create a session..."}
                   disabled={!activeSessionId || sending}
+                  data-testid="chat-input"
                   rows={1}
                   className="w-full bg-transparent text-[14px] text-[#ececec] outline-none py-3 px-4 resize-none leading-relaxed placeholder:text-[#555555] no-scrollbar"
                 />
@@ -324,6 +404,7 @@ const ChatView: React.FC = () => {
                     <button 
                       onClick={handleSendMessage}
                       disabled={!activeSessionId || sending || !input.trim()}
+                      data-testid="send-message-btn"
                       className={`p-2 rounded-xl transition-all ${!input.trim() ? 'text-[#333333]' : 'bg-[#FF4D00] text-[#000000] hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,77,0,0.3)]'}`}
                     >
                       <Send className="w-4 h-4" strokeWidth={3} />
@@ -342,11 +423,15 @@ const ChatView: React.FC = () => {
 
 // --- SUB-COMPONENTS ---
 
-const ChatMessage: React.FC<{role: string, content: any, time?: string}> = ({role, content, time}) => {
+const ChatMessage: React.FC<{role: string, content: any, time?: string, index: number}> = ({role, content, time, index}) => {
   const isUser = role === 'user';
   
   return (
-    <div className={`flex gap-6 py-8 group animate-in fade-in duration-500 border-b border-[#222222]/30 last:border-0 ${isUser ? '' : ''}`}>
+    <div 
+      className={`flex gap-6 py-8 group animate-in fade-in duration-500 border-b border-[#222222]/30 last:border-0`}
+      data-testid={`chat-message-${index}`}
+      data-role={role}
+    >
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-lg ${
         isUser 
           ? 'bg-gradient-to-br from-[#333333] to-[#111111] border border-[#444444] text-[#ececec]' 
@@ -361,14 +446,14 @@ const ChatMessage: React.FC<{role: string, content: any, time?: string}> = ({rol
           </span>
           <span className="text-[9px] text-[#333333] font-mono">{time}</span>
         </div>
-        <div className="prose prose-invert prose-sm max-w-none text-[14.5px] leading-relaxed text-[#d1d1d1]">
+        <div className="prose prose-invert prose-sm max-w-none text-[14.5px] leading-relaxed text-[#d1d1d1]" data-testid="message-content">
           {typeof content === 'string' ? (
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
               components={{
-                code({node, inline, className, children, ...props}: any) {
+                code({node, className, children, ...props}: any) {
                   const match = /language-(\w+)/.exec(className || '');
-                  return !inline && match ? (
+                  return match ? (
                     <div className="my-4 rounded-xl overflow-hidden border border-[#333333] shadow-2xl">
                       <div className="bg-[#1a1a1a] px-4 py-2 flex justify-between items-center border-b border-[#222222]">
                         <span className="text-[9px] font-bold text-[#555555] uppercase tracking-widest font-mono">{match[1]}</span>
@@ -424,9 +509,11 @@ const ChatMessage: React.FC<{role: string, content: any, time?: string}> = ({rol
   );
 };
 
-const SessionItem: React.FC<{name: string, time?: string, active?: boolean, onClick: () => void, onDelete: (e: React.MouseEvent) => void}> = ({name, time, active, onClick, onDelete}) => (
+const SessionItem: React.FC<{id: string, name: string, time?: string, active?: boolean, onClick: () => void, onDelete: (e: React.MouseEvent) => void}> = ({id, name, time, active, onClick, onDelete}) => (
   <div 
     onClick={onClick}
+    data-testid={`session-item-${id}`}
+    data-active={active}
     className={`mx-2 my-0.5 px-3 py-2.5 cursor-pointer rounded-lg transition-all group relative flex items-center gap-3 ${
       active 
         ? 'bg-[#1a1a1a] text-[#ffffff] shadow-lg ring-1 ring-[#ffffff]/5' 
@@ -443,6 +530,7 @@ const SessionItem: React.FC<{name: string, time?: string, active?: boolean, onCl
     
     <button 
       onClick={onDelete}
+      data-testid="delete-session-btn"
       className={`p-1.5 rounded-md hover:bg-[#222222] hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 ${active ? 'text-[#444444]' : 'text-[#333333]'}`}
       title="Delete Session"
     >
@@ -451,9 +539,10 @@ const SessionItem: React.FC<{name: string, time?: string, active?: boolean, onCl
   </div>
 );
 
-const HeroAction: React.FC<{label: string, icon: React.ReactNode, onClick?: () => void}> = ({label, icon, onClick}) => (
+const HeroAction: React.FC<{label: string, icon: React.ReactNode, onClick?: () => void, 'data-testid'?: string}> = ({label, icon, onClick, 'data-testid': testId}) => (
   <button 
     onClick={onClick}
+    data-testid={testId}
     className="flex items-center gap-3 p-4 bg-[#111111] border border-[#222222] rounded-2xl hover:border-[#FF4D00]/40 transition-all text-left hover:bg-[#161616] group"
   >
     <div className="w-10 h-10 rounded-xl bg-[#0a0a0a] flex items-center justify-center text-[#FF4D00] group-hover:scale-110 transition-transform shadow-inner">
