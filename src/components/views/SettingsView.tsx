@@ -107,7 +107,7 @@ const SettingsView: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-1 overflow-hidden bg-[#080808]">
+    <div data-testid="settings-view-container" className="flex flex-1 overflow-hidden bg-[#080808]">
       {/* SIDEBAR NAV */}
       <div className="w-64 border-r border-[#222222] bg-[#111111] flex flex-col shrink-0">
         <div className="p-6 border-b border-[#222222]">
@@ -206,6 +206,7 @@ const SettingsView: React.FC = () => {
                   <option value="ares">Ares (War)</option>
                   <option value="mono">Mono (CLI)</option>
                   <option value="slate">Slate (Pro)</option>
+                  <option value="cyberpunk">Cyberpunk (Neon)</option>
                 </select>
               </Field>
               <Toggle label="Streaming Mode" checked={data?.display?.streaming !== false} onChange={v => updateConfig('display.streaming', v)} />
