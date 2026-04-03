@@ -72,15 +72,27 @@ const SettingsView: React.FC = () => {
 
   const updateConfig = (path: string, value: any) => {
     if (!data) return;
-    const newData = { ...data };
+    // Use deep clone to ensure React detects changes in nested objects
+    const newData = JSON.parse(JSON.stringify(data));
+    
     const parts = path.split('.');
-    let current: any = newData;
+    let current: any = newData.config || (newData.config = {});
+    
     for (let i = 0; i < parts.length - 1; i++) {
       if (!current[parts[i]] || typeof current[parts[i]] !== 'object') current[parts[i]] = {};
       current = current[parts[i]];
     }
     current[parts[parts.length - 1]] = value;
     setData(newData);
+
+    // Immediate theme application for UI feedback
+    if (path === 'display.skin') {
+      localStorage.setItem('hermes_theme', value);
+      // Forced DOM application for instant results
+      const themes = ['default', 'ares', 'mono', 'slate', 'cyberpunk'];
+      themes.forEach(t => document.body.classList.remove(`theme-${t}`));
+      document.body.classList.add(`theme-${value}`);
+    }
   };
 
   const updateEnv = (key: string, value: string) => {
@@ -92,7 +104,7 @@ const SettingsView: React.FC = () => {
     scrollRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  if (loading) return <div className="flex-1 flex items-center justify-center text-[#FF4D00] animate-pulse font-black uppercase tracking-[0.5em]">Neural Sync Active...</div>;
+  if (loading) return <div data-testid="loading-indicator" className="flex-1 flex items-center justify-center text-[var(--accent)] animate-pulse font-black uppercase tracking-[0.5em]">Neural Sync Active...</div>;
 
   const navItems = [
     { id: 'model', label: 'Model & Identity', icon: '🧠' },
@@ -107,30 +119,30 @@ const SettingsView: React.FC = () => {
   ];
 
   return (
-    <div data-testid="settings-view-container" className="flex flex-1 overflow-hidden bg-[#080808]">
+    <div data-testid="settings-view-container" className="flex flex-1 overflow-hidden bg-[var(--bg-main)]">
       {/* SIDEBAR NAV */}
-      <div className="w-64 border-r border-[#222222] bg-[#111111] flex flex-col shrink-0">
-        <div className="p-6 border-b border-[#222222]">
-          <h2 className="text-sm font-black text-[#E0E0E0] tracking-widest uppercase">System Settings</h2>
-          <p className="text-[9px] text-[#444444] uppercase mt-1">Global Config Center</p>
+      <div className="w-64 border-r border-[var(--border-main)] bg-[var(--bg-sidebar)] flex flex-col shrink-0">
+        <div className="p-6 border-b border-[var(--border-main)]">
+          <h2 className="text-sm font-black text-[var(--text-bright)] tracking-widest uppercase">System Settings</h2>
+          <p className="text-[9px] text-[var(--text-muted)] uppercase mt-1">Global Config Center</p>
         </div>
         <div className="flex-1 overflow-y-auto py-2 no-scrollbar">
           {navItems.map(item => (
             <button
               key={item.id}
               onClick={() => scrollToSection(item.id)}
-              className="w-full flex items-center gap-3 px-6 py-3.5 text-left transition-all text-[#555555] hover:text-[#FF4D00] hover:bg-[#111111] group"
+              className="w-full flex items-center gap-3 px-6 py-3.5 text-left transition-all text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--bg-surface)] group"
             >
               <span className="text-base grayscale group-hover:grayscale-0">{item.icon}</span>
               <span className="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
             </button>
           ))}
         </div>
-        <div className="p-6 border-t border-[#222222] space-y-3">
+        <div className="p-6 border-t border-[var(--border-main)] space-y-3">
           <button 
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-[#FF4D00] text-[#080808] py-3 text-[10px] font-black rounded-lg hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,77,0,0.2)] uppercase"
+            className="w-full bg-[var(--accent)] text-[var(--bg-main)] py-3 text-[10px] font-black rounded-lg hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,77,0,0.2)] uppercase"
           >
             {saving ? 'Saving...' : 'Sync Config'}
           </button>
@@ -138,25 +150,25 @@ const SettingsView: React.FC = () => {
       </div>
 
       {/* MAIN SCROLL AREA */}
-      <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,#111111,transparent)] scroll-smooth px-12 pt-12 pb-40 no-scrollbar">
+      <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,var(--bg-sidebar),transparent)] scroll-smooth px-12 pt-12 pb-40 no-scrollbar">
         <div className="max-w-4xl mx-auto space-y-24">
           
           <Section id="model" title="Neural Model & Identity" icon="🧠" ref={el => scrollRefs.current['model'] = el}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Field label="Inference Model">
-                <input value={data?.model?.default || ''} onChange={e => updateConfig('model.default', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]" />
+                <input value={data?.model?.default || ''} onChange={e => updateConfig('model.default', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]" />
               </Field>
               <Field label="Provider">
-                <input value={data?.model?.provider || ''} onChange={e => updateConfig('model.provider', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]" />
+                <input value={data?.model?.provider || ''} onChange={e => updateConfig('model.provider', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]" />
               </Field>
               <Field label="API mode">
-                <select value={data?.model?.api_mode || 'chat_completions'} onChange={e => updateConfig('model.api_mode', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]">
+                <select value={data?.model?.api_mode || 'chat_completions'} onChange={e => updateConfig('model.api_mode', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]">
                   <option value="chat_completions">Chat Completions</option>
                   <option value="codex_responses">Codex Responses</option>
                 </select>
               </Field>
               <Field label="OpenRouter Key (.env)">
-                <input type="password" value={data?.env?.OPENROUTER_API_KEY || ''} onChange={e => updateEnv('OPENROUTER_API_KEY', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]" />
+                <input type="password" value={data?.env?.OPENROUTER_API_KEY || ''} onChange={e => updateEnv('OPENROUTER_API_KEY', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]" />
               </Field>
             </div>
           </Section>
@@ -164,10 +176,10 @@ const SettingsView: React.FC = () => {
           <Section id="behavior" title="Agent Cognition & Behavior" icon="🤖" ref={el => scrollRefs.current['behavior'] = el}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Field label="Max Turns (Autonomy)">
-                <input type="number" value={data?.agent?.max_turns || 30} onChange={e => updateConfig('agent.max_turns', parseInt(e.target.value))} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]" />
+                <input type="number" value={data?.agent?.max_turns || 30} onChange={e => updateConfig('agent.max_turns', parseInt(e.target.value))} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]" />
               </Field>
               <Field label="Reasoning Effort">
-                <select value={data?.agent?.reasoning_effort || 'high'} onChange={e => updateConfig('agent.reasoning_effort', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]">
+                <select value={data?.agent?.reasoning_effort || 'high'} onChange={e => updateConfig('agent.reasoning_effort', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]">
                   {['xhigh', 'high', 'medium', 'low', 'minimal', 'none'].map(v => <option key={v} value={v}>{v.toUpperCase()}</option>)}
                 </select>
               </Field>
@@ -179,21 +191,21 @@ const SettingsView: React.FC = () => {
           <Section id="voice" title="Neural Sonic Interface" icon="🎙️" ref={el => scrollRefs.current['voice'] = el}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Field label="STT Provider">
-                <select value={data?.stt?.provider || 'local'} onChange={e => updateConfig('stt.provider', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]">
+                <select value={data?.stt?.provider || 'local'} onChange={e => updateConfig('stt.provider', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]">
                   <option value="local">Local (faster-whisper)</option>
                   <option value="groq">Groq</option>
                   <option value="openai">OpenAI</option>
                 </select>
               </Field>
               <Field label="TTS Provider">
-                <select value={data?.tts?.provider || 'edge'} onChange={e => updateConfig('tts.provider', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]">
+                <select value={data?.tts?.provider || 'edge'} onChange={e => updateConfig('tts.provider', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]">
                   <option value="edge">Edge (Free)</option>
                   <option value="elevenlabs">ElevenLabs</option>
                   <option value="openai">OpenAI</option>
                 </select>
               </Field>
               <Field label="ElevenLabs Key (.env)">
-                <input type="password" value={data?.env?.ELEVENLABS_API_KEY || ''} onChange={e => updateEnv('ELEVENLABS_API_KEY', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]" />
+                <input type="password" value={data?.env?.ELEVENLABS_API_KEY || ''} onChange={e => updateEnv('ELEVENLABS_API_KEY', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]" />
               </Field>
             </div>
           </Section>
@@ -201,7 +213,7 @@ const SettingsView: React.FC = () => {
           <Section id="display" title="Interface & Visuals" icon="🎨" ref={el => scrollRefs.current['display'] = el}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Field label="UI Skin">
-                <select value={data?.display?.skin || 'default'} onChange={e => updateConfig('display.skin', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]">
+                <select value={data?.config?.display?.skin || 'default'} onChange={e => updateConfig('display.skin', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]">
                   <option value="default">Neural (Default)</option>
                   <option value="ares">Ares (War)</option>
                   <option value="mono">Mono (CLI)</option>
@@ -209,21 +221,21 @@ const SettingsView: React.FC = () => {
                   <option value="cyberpunk">Cyberpunk (Neon)</option>
                 </select>
               </Field>
-              <Toggle label="Streaming Mode" checked={data?.display?.streaming !== false} onChange={v => updateConfig('display.streaming', v)} />
-              <Toggle label="Show Token Cost" checked={data?.display?.show_cost !== false} onChange={v => updateConfig('display.show_cost', v)} />
+              <Toggle label="Streaming Mode" checked={data?.config?.display?.streaming !== false} onChange={v => updateConfig('display.streaming', v)} />
+              <Toggle label="Show Token Cost" checked={data?.config?.display?.show_cost !== false} onChange={v => updateConfig('display.show_cost', v)} />
             </div>
           </Section>
 
           <Section id="execution" title="Execution Layers" icon="🖥️" ref={el => scrollRefs.current['execution'] = el}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Field label="Terminal Backend">
-                <select value={data?.terminal?.backend || 'local'} onChange={e => updateConfig('terminal.backend', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]">
+                <select value={data?.terminal?.backend || 'local'} onChange={e => updateConfig('terminal.backend', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]">
                   <option value="local">Local OS</option>
                   <option value="docker">Docker</option>
                 </select>
               </Field>
               <Field label="Working Directory">
-                <input value={data?.terminal?.cwd || '~/'} onChange={e => updateConfig('terminal.cwd', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]" />
+                <input value={data?.terminal?.cwd || '~/'} onChange={e => updateConfig('terminal.cwd', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]" />
               </Field>
               <Toggle label="Headless Browser" checked={data?.browser?.headless !== false} onChange={v => updateConfig('browser.headless', v)} />
             </div>
@@ -234,7 +246,7 @@ const SettingsView: React.FC = () => {
               <Toggle label="Long-term Memory" checked={data?.memory?.memory_enabled !== false} onChange={v => updateConfig('memory.memory_enabled', v)} />
               <Toggle label="User Persona Profile" checked={data?.memory?.user_profile_enabled !== false} onChange={v => updateConfig('memory.user_profile_enabled', v)} />
               <Field label="Nudge Turn Interval">
-                <input type="number" value={data?.memory?.nudge_interval || 10} onChange={e => updateConfig('memory.nudge_interval', parseInt(e.target.value))} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]" />
+                <input type="number" value={data?.memory?.nudge_interval || 10} onChange={e => updateConfig('memory.nudge_interval', parseInt(e.target.value))} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]" />
               </Field>
             </div>
           </Section>
@@ -250,10 +262,10 @@ const SettingsView: React.FC = () => {
           <Section id="gateway" title="Messaging Gateway" icon="🌐" ref={el => scrollRefs.current['gateway'] = el}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Field label="Telegram Bot Token (.env)">
-                <input type="password" value={data?.env?.TELEGRAM_BOT_TOKEN || ''} onChange={e => updateEnv('TELEGRAM_BOT_TOKEN', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]" />
+                <input type="password" value={data?.env?.TELEGRAM_BOT_TOKEN || ''} onChange={e => updateEnv('TELEGRAM_BOT_TOKEN', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]" />
               </Field>
               <Field label="Telegram Home Channel (.env)">
-                <input value={data?.env?.TELEGRAM_HOME_CHANNEL || ''} onChange={e => updateEnv('TELEGRAM_HOME_CHANNEL', e.target.value)} className="w-full bg-[#0c0c0c] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]" />
+                <input value={data?.env?.TELEGRAM_HOME_CHANNEL || ''} onChange={e => updateEnv('TELEGRAM_HOME_CHANNEL', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]" />
               </Field>
               <Toggle label="Neural Isolation (Groups)" checked={data?.group_sessions_per_user !== false} onChange={v => updateConfig('group_sessions_per_user', v)} />
             </div>
@@ -267,7 +279,7 @@ const SettingsView: React.FC = () => {
               <ActionButton label="Neural Update" cmd="update" onRun={handleRunAction} />
             </div>
             {actionOutput && (
-              <pre className="mt-8 bg-[#0c0c0c] border border-[#222222] p-6 rounded-2xl font-mono text-[11px] text-[#00FF41] leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
+              <pre className="mt-8 bg-[var(--bg-main)] border border-[var(--border-main)] p-6 rounded-2xl font-mono text-[11px] text-[#00FF41] leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
                 {actionOutput}
                 {runningAction && <span className="animate-pulse">_</span>}
               </pre>
@@ -283,12 +295,12 @@ const SettingsView: React.FC = () => {
 const Section = React.forwardRef<HTMLDivElement, { id: string, title: string, icon: string, children: React.ReactNode }>(({ title, icon, children }, ref) => (
   <div ref={ref} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <div className="flex items-center gap-4">
-      <div className="w-10 h-10 rounded-xl bg-[#111111] border border-[#222222] flex items-center justify-center text-xl shadow-xl">{icon}</div>
-      <h3 className="text-sm font-black text-[#E0E0E0] uppercase tracking-[0.2em]">{title}</h3>
-      <div className="h-[1px] flex-1 bg-gradient-to-r from-[#222222] to-transparent"></div>
+      <div className="w-10 h-10 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-main)] flex items-center justify-center text-xl shadow-xl">{icon}</div>
+      <h3 className="text-sm font-black text-[var(--text-bright)] uppercase tracking-[0.2em]">{title}</h3>
+      <div className="h-[1px] flex-1 bg-gradient-to-r from-[var(--border-main)] to-transparent"></div>
     </div>
-    <div className="bg-[#111111]/40 backdrop-blur-md border border-[#222222] p-8 rounded-3xl shadow-2xl relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF4D00]/10 to-transparent"></div>
+    <div className="bg-[var(--bg-surface)]/40 backdrop-blur-md border border-[var(--border-main)] p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--accent)]/10 to-transparent"></div>
       {children}
     </div>
   </div>
@@ -296,23 +308,23 @@ const Section = React.forwardRef<HTMLDivElement, { id: string, title: string, ic
 
 const Field: React.FC<{label: string, children: React.ReactNode}> = ({label, children}) => (
   <div className="space-y-2">
-    <label className="block text-[9px] font-bold text-[#444444] uppercase tracking-widest px-1">{label}</label>
+    <label className="block text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest px-1">{label}</label>
     {children}
   </div>
 );
 
 const Toggle: React.FC<{label: string, checked: boolean, onChange: (v: boolean) => void}> = ({label, checked, onChange}) => (
-  <div className="flex items-center justify-between p-4 bg-[#0c0c0c]/50 border border-[#222222] rounded-xl">
-    <span className="text-[10px] text-[#B0B0B0] font-bold uppercase tracking-widest">{label}</span>
+  <div className="flex items-center justify-between p-4 bg-[var(--bg-main)]/50 border border-[var(--border-main)] rounded-xl">
+    <span className="text-[10px] text-[var(--text-main)] font-bold uppercase tracking-widest">{label}</span>
     <label className="relative inline-flex items-center cursor-pointer shrink-0">
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer opacity-0 absolute w-11 h-6 cursor-pointer z-10" />
-      <div className="w-10 h-5 bg-[#222222] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#444444] after:border-[#333333] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FF4D00] peer-checked:after:bg-[#080808]"></div>
+      <div className="w-10 h-5 bg-[var(--border-main)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--text-muted)] after:border-[var(--border-bright)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)] peer-checked:after:bg-[var(--bg-main)]"></div>
     </label>
   </div>
 );
 
 const ActionButton: React.FC<{label: string, cmd: string, onRun: (cmd: string) => void}> = ({label, cmd, onRun}) => (
-  <button onClick={() => onRun(cmd)} className="bg-[#161616] border border-[#222222] text-[#888888] py-3 text-[9px] font-bold uppercase rounded-lg hover:bg-[#FF4D00] hover:text-[#080808] hover:border-[#FF4D00] transition-all">
+  <button onClick={() => onRun(cmd)} className="bg-[var(--bg-surface)] border border-[var(--border-main)] text-[var(--text-muted)] py-3 text-[9px] font-bold uppercase rounded-lg hover:bg-[var(--accent)] hover:text-[var(--bg-main)] hover:border-[var(--accent)] transition-all">
     {label}
   </button>
 );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 type NavItem = 'chat' | 'mcp' | 'logs' | 'dashboard' | 'subagents' | 'settings' | 'graph' | 'commands' | 'gateway' | 'skills';
 
@@ -9,11 +9,57 @@ interface LayoutProps {
 }
 
 const AppLayout: React.FC<LayoutProps> = ({ activeView, setActiveView, children }) => {
+  const [theme, setTheme] = useState(localStorage.getItem('hermes_theme') || 'default');
+
+  useEffect(() => {
+    // Initial sync from server
+    fetch('http://localhost:3008/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.config?.display?.skin) {
+          const serverTheme = data.config.display.skin;
+          if (!localStorage.getItem('hermes_theme')) {
+            setTheme(serverTheme);
+            localStorage.setItem('hermes_theme', serverTheme);
+          }
+        }
+      })
+      .catch(err => console.error('Failed to fetch theme:', err));
+
+    // Listen for storage events (cross-tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'hermes_theme' && e.newValue) {
+        setTheme(e.newValue);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Polling for same-window updates
+    const interval = setInterval(() => {
+      const current = localStorage.getItem('hermes_theme');
+      if (current && current !== theme) {
+        setTheme(current);
+      }
+    }, 300);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [theme]);
+
+  // Apply class to body for global variable scope
+  useEffect(() => {
+    const themes = ['default', 'ares', 'mono', 'slate', 'cyberpunk'];
+    themes.forEach(t => document.body.classList.remove(`theme-${t}`));
+    document.body.classList.add(`theme-${theme}`);
+  }, [theme]);
+
   return (
-    <div className="flex h-screen w-full bg-[#080808] text-[#B0B0B0] overflow-hidden font-mono">
+    <div className="flex h-screen w-full bg-[var(--bg-main)] text-[var(--text-main)] overflow-hidden font-mono">
       {/* LEFT RAIL NAVIGATION */}
-      <div className="w-[72px] bg-[#111111] border-r border-[#222222] flex flex-col items-center py-6 gap-8">
-        <div className="w-10 h-10 bg-[#FF4D00] flex items-center justify-center rounded-sm font-bold text-[#080808] text-xl tracking-tighter shadow-[0_0_15px_rgba(255,77,0,0.3)]">
+      <div className="w-[72px] bg-[var(--bg-sidebar)] border-r border-[var(--border-main)] flex flex-col items-center py-6 gap-8">
+        <div className="w-10 h-10 bg-[var(--accent)] flex items-center justify-center rounded-sm font-bold text-[var(--bg-main)] text-xl tracking-tighter shadow-[0_0_15px_var(--accent-shadow)]">
           H
         </div>
         
@@ -88,7 +134,7 @@ const AppLayout: React.FC<LayoutProps> = ({ activeView, setActiveView, children 
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col relative">
-        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF4D00]/20 to-transparent pointer-events-none"></div>
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent pointer-events-none"></div>
         {children}
       </div>
     </div>
@@ -98,13 +144,14 @@ const AppLayout: React.FC<LayoutProps> = ({ activeView, setActiveView, children 
 const NavIcon: React.FC<{active: boolean, onClick: () => void, icon: React.ReactNode, label: string}> = ({active, onClick, icon, label}) => (
   <button 
     onClick={onClick}
-    className={`group relative flex items-center justify-center p-3 rounded-md transition-all duration-200 ${active ? 'bg-[#FF4D00]/10 text-[#FF4D00]' : 'text-[#444444] hover:text-[#B0B0B0] hover:bg-[#222222]'}`}
+    data-testid={`nav-link-${label.toLowerCase()}`}
+    className={`group relative flex items-center justify-center p-3 rounded-md transition-all duration-200 ${active ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-bright)] hover:bg-[var(--border-main)]'}`}
   >
     {icon}
-    <div className={`absolute left-16 px-2 py-1 bg-[#222222] text-[#E0E0E0] text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-[#333333]`}>
+    <div className={`absolute left-16 px-2 py-1 bg-[var(--bg-sidebar)] text-[var(--text-bright)] text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-[var(--border-main)]`}>
       {label}
     </div>
-    {active && <div className="absolute left-[-2px] w-[2px] h-8 bg-[#FF4D00] rounded-r-full"></div>}
+    {active && <div className="absolute left-[-2px] w-[2px] h-8 bg-[var(--accent)] rounded-r-full"></div>}
   </button>
 );
 

@@ -33,10 +33,10 @@ const LogView: React.FC = () => {
   }, [level, service, search]);
 
   return (
-    <div className="flex-1 flex flex-col bg-[#080808] p-6 h-full overflow-hidden">
+    <div className="flex-1 flex flex-col bg-[var(--bg-main)] p-6 h-full overflow-hidden" data-testid="log-view-container">
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h2 className="text-xl font-bold text-[#E0E0E0] tracking-tight">REAL-TIME LOG CONSOLE</h2>
+          <h2 className="text-xl font-bold text-[var(--text-bright)] tracking-tight">REAL-TIME LOG CONSOLE</h2>
           <p className="text-[10px] text-[#555555] uppercase tracking-[0.2em] mt-1">Global System Event Stream</p>
         </div>
         
@@ -46,7 +46,7 @@ const LogView: React.FC = () => {
             <select 
               value={level} 
               onChange={e => setLevel(e.target.value)}
-              className="bg-[#111111] border border-[#222222] text-[10px] text-[#B0B0B0] px-2 py-1 outline-none focus:border-[#FF4D00]"
+              className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] text-[10px] text-[#B0B0B0] px-2 py-1 outline-none focus:border-[#FF4D00]"
             >
               <option value="">ALL LEVELS</option>
               <option value="info">INFO</option>
@@ -62,7 +62,7 @@ const LogView: React.FC = () => {
               value={service}
               onChange={e => setService(e.target.value)}
               placeholder="e.g. GATEWAY"
-              className="bg-[#111111] border border-[#222222] text-[10px] text-[#B0B0B0] px-2 py-1 outline-none focus:border-[#FF4D00] w-24"
+              className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] text-[10px] text-[#B0B0B0] px-2 py-1 outline-none focus:border-[#FF4D00] w-24"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -72,15 +72,15 @@ const LogView: React.FC = () => {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Query..."
-              className="bg-[#111111] border border-[#222222] text-[10px] text-[#B0B0B0] px-2 py-1 outline-none focus:border-[#FF4D00] w-48"
+              className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] text-[10px] text-[#B0B0B0] px-2 py-1 outline-none focus:border-[#FF4D00] w-48"
             />
           </div>
           <button onClick={fetchLogs} className="bg-[#FF4D00] text-[#080808] px-4 py-1 text-[10px] font-bold self-end hover:scale-105 transition-all">RELOAD</button>
         </div>
       </div>
 
-      <div className="flex-1 bg-[#080808] border border-[#222222] rounded-sm flex flex-col overflow-hidden">
-        <div className="grid grid-cols-[160px_80px_100px_1fr] px-4 py-2 bg-[#111111] border-b border-[#222222] text-[10px] font-bold text-[#444444] tracking-widest uppercase">
+      <div className="flex-1 bg-[var(--bg-main)] border border-[var(--border-main)] rounded-sm flex flex-col overflow-hidden">
+        <div className="grid grid-cols-[160px_80px_100px_1fr] px-4 py-2 bg-[var(--bg-sidebar)] border-b border-[var(--border-main)] text-[10px] font-bold text-[#444444] tracking-widest uppercase">
           <div>Timestamp</div>
           <div>Level</div>
           <div>Service</div>
@@ -88,7 +88,7 @@ const LogView: React.FC = () => {
         </div>
         <div className="flex-1 overflow-y-auto font-mono text-xs">
           {loading && logs.length === 0 ? (
-            <div className="p-8 text-center text-[#222222] animate-pulse">STREAMING DATA...</div>
+            <div data-testid="loading-indicator" className="p-8 text-center text-[#222222] animate-pulse">STREAMING DATA...</div>
           ) : (
             logs.map(log => (
               <div key={log.id} className="grid grid-cols-[160px_80px_100px_1fr] px-4 py-2 border-b border-[#161616] hover:bg-[#161616]/50 transition-colors group">

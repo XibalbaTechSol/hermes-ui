@@ -35,7 +35,7 @@ const ConfigView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-1 overflow-hidden bg-[#080808]">
+    <div data-testid="config-view-container" className="flex flex-1 overflow-hidden bg-[#080808]">
       {/* Sidebar */}
       <div className="w-64 border-r border-[#222222] bg-[#111111] flex flex-col">
         <div className="p-4 border-b border-[#222222]">

@@ -28,7 +28,7 @@ const ConfigNode = ({ data, selected }: any) => (
     </div>
     <div className="flex items-center gap-2">
       <span className="text-sm">{data.icon || '⚙️'}</span>
-      <div className="text-xs font-bold text-[#E0E0E0]">{data.label}</div>
+      <div className="text-xs font-bold text-[var(--text-bright)]">{data.label}</div>
     </div>
     <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-[#007AFF] border-none" />
   </div>
@@ -42,7 +42,7 @@ const MemoryNode = ({ data, selected }: any) => (
     </div>
     <div className="flex items-center gap-2">
       <span className="text-sm">{data.icon || '💾'}</span>
-      <div className="text-xs font-bold text-[#E0E0E0]">{data.label}</div>
+      <div className="text-xs font-bold text-[var(--text-bright)]">{data.label}</div>
     </div>
     <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[#FF8A00] border-none" />
   </div>
@@ -56,23 +56,23 @@ const SkillNode = ({ data, selected }: any) => (
     </div>
     <div className="flex items-center gap-2">
       <span className="text-sm">{data.icon || '🛠️'}</span>
-      <div className="text-xs font-bold text-[#E0E0E0]">{data.label}</div>
+      <div className="text-xs font-bold text-[var(--text-bright)]">{data.label}</div>
     </div>
     <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[#00FF41] border-none" />
   </div>
 );
 
 const SubagentNode = ({ data, selected }: any) => (
-  <div className={`px-4 py-3 rounded-lg bg-[#FF4D00]/5 border-2 transition-all ${selected ? 'border-[#FF4D00] shadow-[0_0_15px_rgba(255,77,0,0.4)]' : 'border-[#FF4D00]/30'}`}>
+  <div className={`px-4 py-3 rounded-lg bg-[var(--accent)]/5 border-2 transition-all ${selected ? 'border-[var(--accent)] shadow-[0_0_15px_rgba(255,77,0,0.4)]' : 'border-[var(--accent)]/30'}`}>
     <div className="flex items-center gap-2 mb-1">
-      <div className="w-2 h-2 bg-[#FF4D00] rounded-sm animate-pulse"></div>
-      <span className="text-[10px] font-bold text-[#FF4D00] uppercase tracking-widest">Agency Division</span>
+      <div className="w-2 h-2 bg-[var(--accent)] rounded-sm animate-pulse"></div>
+      <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-widest">Agency Division</span>
     </div>
     <div className="flex items-center gap-2">
       <span className="text-sm">{data.icon || '🧠'}</span>
-      <div className="text-xs font-bold text-[#E0E0E0]">{data.label}</div>
+      <div className="text-xs font-bold text-[var(--text-bright)]">{data.label}</div>
     </div>
-    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[#FF4D00] border-none" />
+    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[var(--accent)] border-none" />
   </div>
 );
 
@@ -84,7 +84,7 @@ const LoopNode = ({ data, selected }: any) => (
       </div>
       <div>
         <div className="text-[10px] font-black text-[#007AFF] uppercase tracking-[0.2em]">NEURAL_LOOP</div>
-        <div className="text-xs font-bold text-[#E0E0E0] mt-0.5">{data.label}</div>
+        <div className="text-xs font-bold text-[var(--text-bright)] mt-0.5">{data.label}</div>
       </div>
     </div>
     <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[#007AFF] border-none" />
@@ -93,33 +93,33 @@ const LoopNode = ({ data, selected }: any) => (
 );
 
 const McpNode = ({ data, selected }: any) => (
-  <div className={`px-4 py-3 rounded-lg bg-[#E0E0E0]/5 border-2 transition-all ${selected ? 'border-[#E0E0E0] shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'border-[#E0E0E0]/20'}`}>
+  <div className={`px-4 py-3 rounded-lg bg-[var(--text-bright)]/5 border-2 transition-all ${selected ? 'border-[var(--text-bright)] shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'border-[var(--text-bright)]/20'}`}>
     <div className="flex items-center gap-2 mb-1">
-      <div className="w-2 h-2 bg-[#E0E0E0] rounded-full animate-pulse"></div>
-      <span className="text-[10px] font-bold text-[#888888] uppercase tracking-widest">Protocol Link (MCP)</span>
+      <div className="w-2 h-2 bg-[var(--text-bright)] rounded-full animate-pulse"></div>
+      <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Protocol Link (MCP)</span>
     </div>
     <div className="flex items-center gap-2">
       <span className="text-sm">{data.icon || '🔌'}</span>
-      <div className="text-xs font-bold text-[#E0E0E0]">{data.label}</div>
+      <div className="text-xs font-bold text-[var(--text-bright)]">{data.label}</div>
     </div>
-    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[#E0E0E0] border-none" />
+    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[var(--text-bright)] border-none" />
   </div>
 );
 
 const CoreNode = () => (
-  <div className="px-8 py-6 rounded-2xl bg-[#111111] border-4 border-[#FF4D00] shadow-[0_0_50px_rgba(255,77,0,0.3)]">
+  <div className="px-8 py-6 rounded-2xl bg-[var(--bg-surface)] border-4 border-[var(--accent)] shadow-[0_0_50px_rgba(255,77,0,0.3)]">
     <div className="flex flex-col items-center gap-3">
-      <div className="w-12 h-12 bg-[#FF4D00] rounded-xl flex items-center justify-center text-[#080808] font-black text-2xl">H</div>
-      <div className="text-base font-black text-[#E0E0E0] tracking-tighter uppercase">Hermes Core</div>
+      <div className="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center text-[var(--bg-main)] font-black text-2xl">H</div>
+      <div className="text-base font-black text-[var(--text-bright)] tracking-tighter uppercase">Hermes Core</div>
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 bg-[#00FF41] rounded-full animate-pulse"></div>
         <span className="text-[10px] font-bold text-[#00FF41] tracking-widest">NEURAL_HUB_ACTIVE</span>
       </div>
     </div>
-    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[#FF4D00] border-none" />
-    <Handle type="target" position={Position.Left} className="w-2 h-2 !bg-[#FF4D00] border-none" />
-    <Handle type="target" position={Position.Right} className="w-2 h-2 !bg-[#FF4D00] border-none" />
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-[#FF4D00] border-none" />
+    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[var(--accent)] border-none" />
+    <Handle type="target" position={Position.Left} className="w-2 h-2 !bg-[var(--accent)] border-none" />
+    <Handle type="target" position={Position.Right} className="w-2 h-2 !bg-[var(--accent)] border-none" />
+    <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-[var(--accent)] border-none" />
   </div>
 );
 
@@ -284,17 +284,17 @@ const GraphContent: React.FC = () => {
     .catch(err => { setSaving(false); console.error(err); });
   };
 
-  if (loading) return <div className="flex-1 flex items-center justify-center text-[#FF4D00] animate-pulse uppercase tracking-[0.5em] font-black">Booting Neural Engine...</div>;
+  if (loading) return <div data-testid="loading-indicator" className="flex-1 flex items-center justify-center text-[#FF4D00] animate-pulse uppercase tracking-[0.5em] font-black">Booting Neural Engine...</div>;
 
   return (
-    <div className="flex-1 w-full h-full bg-[#080808] flex overflow-hidden">
+    <div data-testid="graph-view-container" className="flex-1 w-full h-full bg-[var(--bg-obsidian)] flex overflow-hidden">
       {/* SIDEBAR */}
-      <div className="w-72 bg-[#0c0c0c] border-r border-[#222222] flex flex-col p-6 overflow-y-auto no-scrollbar">
+      <div className="w-72 bg-[#0c0c0c] border-r border-[var(--border-main)] flex flex-col p-6 overflow-y-auto no-scrollbar">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-4 h-4 bg-[#FF4D00] rounded rotate-45 shadow-[0_0_15px_#FF4D00]"></div>
-          <h2 className="text-lg font-black text-[#E0E0E0] tracking-tighter uppercase">Automation Engine</h2>
+          <div className="w-4 h-4 bg-[var(--accent-orange)] rounded rotate-45 shadow-[0_0_15px_#FF4D00]"></div>
+          <h2 className="text-lg font-black text-[var(--text-bright)] tracking-tighter uppercase">Automation Engine</h2>
         </div>
-        <p className="text-[10px] text-[#444444] uppercase tracking-[0.3em] mb-8 border-b border-[#222222] pb-4">Neural Architecture Toolset</p>
+        <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-[0.3em] mb-8 border-b border-[var(--border-main)] pb-4">Neural Architecture Toolset</p>
 
         <div className="space-y-8">
           <LibrarySection title="Cognitive Loops">
@@ -313,9 +313,9 @@ const GraphContent: React.FC = () => {
           </LibrarySection>
         </div>
 
-        <div className="mt-auto pt-8 border-t border-[#222222] space-y-4">
-           <button onClick={() => fetch('http://localhost:3008/api/graph', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({nodes, edges}) }).then(() => alert('Architecture saved.'))} className="w-full bg-[#FF4D00] text-[#080808] py-3 text-[10px] font-black rounded-lg hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,77,0,0.2)] uppercase tracking-widest">Commit Topology</button>
-           <button onClick={fetchGraph} className="w-full bg-[#161616] text-[#B0B0B0] py-3 text-[10px] font-black rounded-lg border border-[#222222] hover:bg-[#222222] uppercase tracking-widest">Re-Index Layers</button>
+        <div className="mt-auto pt-8 border-t border-[var(--border-main)] space-y-4">
+           <button onClick={() => fetch('http://localhost:3008/api/graph', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({nodes, edges}) }).then(() => alert('Architecture saved.'))} className="w-full bg-[var(--accent-orange)] text-[#080808] py-3 text-[10px] font-black rounded-lg hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(255,77,0,0.2)] uppercase tracking-widest">Commit Topology</button>
+           <button onClick={fetchGraph} className="w-full bg-[#161616] text-[var(--text-main)] py-3 text-[10px] font-black rounded-lg border border-[var(--border-main)] hover:bg-[#222222] uppercase tracking-widest">Re-Index Layers</button>
         </div>
       </div>
 
@@ -336,27 +336,27 @@ const GraphContent: React.FC = () => {
           colorMode="dark"
         >
           {selectedElement && (
-            <Panel position="top-right" className="w-[450px] bg-[#111111]/95 border border-[#222222] p-0 rounded-2xl backdrop-blur-2xl max-h-[90%] overflow-hidden shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-              <div className="p-6 border-b border-[#222222] flex justify-between items-center bg-[#161616]/50">
+            <Panel position="top-right" className="w-[450px] bg-[var(--panel-bg)]/95 border border-[var(--border-main)] p-0 rounded-2xl backdrop-blur-2xl max-h-[90%] overflow-hidden shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+              <div className="p-6 border-b border-[var(--border-main)] flex justify-between items-center bg-[#161616]/50">
                 <div className="flex items-center gap-4">
                   <div className="text-2xl">{selectedElement.data?.icon}</div>
                   <div>
-                    <h3 className="text-sm font-black text-[#E0E0E0] uppercase tracking-widest">{selectedElement.data?.label}</h3>
-                    <div className="text-[9px] text-[#444444] font-mono uppercase mt-0.5">{selectedElement.type?.toUpperCase()} | {selectedElement.id}</div>
+                    <h3 className="text-sm font-black text-[var(--text-bright)] uppercase tracking-widest">{selectedElement.data?.label}</h3>
+                    <div className="text-[9px] text-[var(--text-muted)] font-mono uppercase mt-0.5">{selectedElement.type?.toUpperCase()} | {selectedElement.id}</div>
                   </div>
                 </div>
-                <button onClick={() => setSelectedElement(null)} className="text-[#444444] hover:text-[#E0E0E0] text-2xl">×</button>
+                <button onClick={() => setSelectedElement(null)} className="text-[var(--text-muted)] hover:text-[var(--text-bright)] text-2xl">×</button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-8 space-y-8">
                 <div className="space-y-4">
-                   <div className="text-[10px] font-bold text-[#FF4D00] uppercase tracking-[0.3em] border-b border-[#FF4D00]/20 pb-2">Neural Identity</div>
+                   <div className="text-[10px] font-bold text-[#FF4D00] uppercase tracking-[0.3em] border-b border-[var(--accent-orange)]/20 pb-2">Neural Identity</div>
                    <div className="space-y-2">
-                      <label className="text-[9px] font-bold text-[#444444] uppercase tracking-widest">Node Label</label>
+                      <label className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Node Label</label>
                       <input 
                         value={selectedElement.data?.label || ''}
                         onChange={(e) => updateNodeLabel(selectedElement.id, e.target.value)}
-                        className="w-full bg-[#080808] border border-[#222222] p-3 text-xs text-[#B0B0B0] font-mono rounded-xl outline-none focus:border-[#FF4D00]"
+                        className="w-full bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent-orange)]"
                       />
                    </div>
                 </div>
@@ -367,7 +367,7 @@ const GraphContent: React.FC = () => {
                     <textarea 
                       value={skillContent}
                       onChange={e => setSkillContent(e.target.value)}
-                      className="w-full bg-[#080808] border border-[#222222] p-4 rounded-xl h-[300px] text-[11px] text-[#B0B0B0] font-mono outline-none focus:border-[#00FF41] resize-none"
+                      className="w-full bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-4 rounded-xl h-[300px] text-[11px] text-[var(--text-main)] font-mono outline-none focus:border-[#00FF41] resize-none"
                     />
                     <button 
                       onClick={handleSaveSkill}
@@ -381,16 +381,16 @@ const GraphContent: React.FC = () => {
 
                 {selectedElement.type === 'subagent' && (
                   <div className="space-y-6">
-                    <div className="text-[10px] font-bold text-[#FF4D00] uppercase tracking-[0.3em] border-b border-[#FF4D00]/20 pb-2">Subagent Logic (DNA)</div>
+                    <div className="text-[10px] font-bold text-[#FF4D00] uppercase tracking-[0.3em] border-b border-[var(--accent-orange)]/20 pb-2">Subagent Logic (DNA)</div>
                     <textarea 
                       value={agentContent}
                       onChange={e => setAgentContent(e.target.value)}
-                      className="w-full bg-[#080808] border border-[#222222] p-4 rounded-xl h-[300px] text-[11px] text-[#B0B0B0] font-mono outline-none focus:border-[#FF4D00] resize-none"
+                      className="w-full bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-4 rounded-xl h-[300px] text-[11px] text-[var(--text-main)] font-mono outline-none focus:border-[var(--accent-orange)] resize-none"
                     />
                     <button 
                       onClick={handleSaveAgent}
                       disabled={saving}
-                      className="w-full bg-[#FF4D00] text-[#080808] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                      className="w-full bg-[var(--accent-orange)] text-[#080808] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
                     >
                       {saving ? 'Synchronizing...' : 'Synchronize Agent Logic'}
                     </button>
@@ -400,8 +400,8 @@ const GraphContent: React.FC = () => {
                 {(selectedElement.type === 'memory' || selectedElement.type === 'db') && (
                   <div className="space-y-6">
                     <div className="text-[10px] font-bold text-[#FF8A00] uppercase tracking-[0.3em] border-b border-[#FF8A00]/20 pb-2">Memory Partition</div>
-                    <div className="bg-[#080808] border border-[#222222] p-4 rounded-xl max-h-[300px] overflow-y-auto">
-                       <pre className="text-[10px] text-[#B0B0B0] font-mono whitespace-pre-wrap leading-relaxed">{memoryContent || 'Initializing read sequence...'}</pre>
+                    <div className="bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-4 rounded-xl max-h-[300px] overflow-y-auto">
+                       <pre className="text-[10px] text-[var(--text-main)] font-mono whitespace-pre-wrap leading-relaxed">{memoryContent || 'Initializing read sequence...'}</pre>
                     </div>
                     <button className="w-full bg-[#FF8A00] text-[#080808] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">Sync Memory Layer</button>
                   </div>
@@ -410,7 +410,7 @@ const GraphContent: React.FC = () => {
                 {selectedElement.type === 'loop' && (
                   <div className="space-y-6">
                     <div className="text-[10px] font-bold text-[#007AFF] uppercase tracking-[0.3em] border-b border-[#007AFF]/20 pb-2">Loop Control</div>
-                    <div className="p-4 bg-[#007AFF]/5 border border-[#007AFF]/20 rounded-xl text-[11px] text-[#B0B0B0] leading-relaxed italic">
+                    <div className="p-4 bg-[#007AFF]/5 border border-[#007AFF]/20 rounded-xl text-[11px] text-[var(--text-main)] leading-relaxed italic">
                       {selectedElement.data?.description || 'Active feedback loop ensuring cognitive consistency and neural optimization.'}
                     </div>
                     <button 
@@ -425,13 +425,13 @@ const GraphContent: React.FC = () => {
                 {selectedElement.type === 'mcp' && (
                   <div className="space-y-6">
                     <div className="text-[10px] font-bold text-[#888888] uppercase tracking-[0.3em] border-b border-[#888888]/20 pb-2">Protocol Link Configuration</div>
-                    <div className="bg-[#080808] border border-[#222222] p-4 rounded-xl space-y-4">
+                    <div className="bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-4 rounded-xl space-y-4">
                        <div className="text-[10px] text-[#FF4D00] font-mono">STATUS: ONLINE</div>
                        <div className="text-[10px] text-[#555555] font-mono uppercase tracking-widest">Type: Remote (npx)</div>
                     </div>
                     <button 
                       onClick={() => handleAction('status')}
-                      className="w-full bg-[#161616] border border-[#222222] text-[#888888] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                      className="w-full bg-[#161616] border border-[var(--border-main)] text-[#888888] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
                     >
                       Ping Health
                     </button>
@@ -440,8 +440,8 @@ const GraphContent: React.FC = () => {
 
                 {executionOutput && (
                   <div className="space-y-3">
-                    <div className="text-[9px] font-bold text-[#444444] uppercase tracking-widest">Neural Telemetry</div>
-                    <pre className="bg-[#080808] border border-[#222222] p-6 rounded-2xl font-mono text-[11px] text-[#00FF41] leading-relaxed whitespace-pre-wrap overflow-x-auto selection:bg-[#00FF41]/20 shadow-inner">
+                    <div className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Neural Telemetry</div>
+                    <pre className="bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-6 rounded-2xl font-mono text-[11px] text-[#00FF41] leading-relaxed whitespace-pre-wrap overflow-x-auto selection:bg-[#00FF41]/20 shadow-inner">
                       {executionOutput}
                       {running && <span className="animate-pulse inline-block ml-1">_</span>}
                     </pre>
@@ -449,7 +449,7 @@ const GraphContent: React.FC = () => {
                 )}
               </div>
               
-              <div className="p-6 border-t border-[#222222] bg-[#0c0c0c] flex gap-4 shrink-0">
+              <div className="p-6 border-t border-[var(--border-main)] bg-[#0c0c0c] flex gap-4 shrink-0">
                  <button 
                    onClick={() => {
                      setNodes((nds) => nds.filter((n) => n.id !== selectedElement.id));
@@ -463,7 +463,7 @@ const GraphContent: React.FC = () => {
             </Panel>
           )}
 
-          <Controls className="bg-[#111111] border-[#222222] !fill-[#FF4D00]" />
+          <Controls className="bg-[var(--panel-bg)] border-[var(--border-main)] !fill-[#FF4D00]" />
           <MiniMap nodeStrokeColor="#FF4D00" nodeColor="#111" maskColor="#080808" style={{ backgroundColor: '#080808', border: '1px solid #222' }} />
           <Background color="#222" gap={20} size={1} />
         </ReactFlow>
@@ -476,7 +476,7 @@ const GraphContent: React.FC = () => {
 
 const LibrarySection: React.FC<{title: string, children: React.ReactNode}> = ({title, children}) => (
   <div className="space-y-3">
-    <h3 className="text-[9px] font-bold text-[#444444] uppercase tracking-widest pl-2">{title}</h3>
+    <h3 className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest pl-2">{title}</h3>
     <div className="grid grid-cols-1 gap-2">
       {children}
     </div>
@@ -495,20 +495,20 @@ const DraggableNode: React.FC<{type: string, label: string, icon: string}> = ({t
     <div 
       draggable 
       onDragStart={(event) => onDragStart(event, type, label, icon)}
-      className="bg-[#111111] border border-[#222222] p-3 rounded-xl flex items-center gap-3 cursor-grab hover:border-[#FF4D00]/40 hover:bg-[#161616] transition-all group active:cursor-grabbing shadow-lg"
+      className="bg-[var(--panel-bg)] border border-[var(--border-main)] p-3 rounded-xl flex items-center gap-3 cursor-grab hover:border-[var(--accent-orange)]/40 hover:bg-[#161616] transition-all group active:cursor-grabbing shadow-lg"
     >
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${
         type === 'config' ? 'bg-[#007AFF]/10 text-[#007AFF]' :
-        type === 'action' ? 'bg-[#FF4D00]/10 text-[#FF4D00]' :
+        type === 'action' ? 'bg-[var(--accent-orange)]/10 text-[#FF4D00]' :
         type === 'memory' ? 'bg-[#FF8A00]/10 text-[#FF8A00]' :
         type === 'skill' ? 'bg-[#00FF41]/10 text-[#00FF41]' :
         type === 'loop' ? 'bg-[#007AFF]/10 text-[#007AFF]' :
-        type === 'mcp' ? 'bg-[#E0E0E0]/10 text-[#E0E0E0]' :
-        'bg-[#FF4D00]/10 text-[#FF4D00]'
+        type === 'mcp' ? 'bg-[#E0E0E0]/10 text-[var(--text-bright)]' :
+        'bg-[var(--accent-orange)]/10 text-[#FF4D00]'
       }`}>
         {icon}
       </div>
-      <span className="text-[11px] font-bold text-[#888888] group-hover:text-[#E0E0E0] uppercase tracking-tighter">{label}</span>
+      <span className="text-[11px] font-bold text-[#888888] group-hover:text-[var(--text-bright)] uppercase tracking-tighter">{label}</span>
     </div>
   );
 };

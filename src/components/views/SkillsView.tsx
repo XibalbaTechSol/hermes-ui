@@ -84,9 +84,9 @@ const SkillsView: React.FC = () => {
     const hasChildren = (skill.subskills && skill.subskills.length > 0) || skill.has_subskills;
 
     return (
-      <div key={skill.id} className="select-none">
+      <div key={skill.id} data-testid={`skill-item-${skill.id}`} className="select-none">
         <div 
-          className={`flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-[#161616] transition-colors border-l-2 ${activeSkill?.id === skill.id ? 'bg-[#161616] border-[#FF4D00] text-[#E0E0E0]' : 'border-transparent text-[#555555]'}`}
+          className={`flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-[var(--bg-surface)] transition-colors border-l-2 ${activeSkill?.id === skill.id ? 'bg-[var(--bg-surface)] border-[var(--accent)] text-[var(--text-bright)]' : 'border-transparent text-[var(--text-muted)]'}`}
           style={{ paddingLeft: `${(depth * 12) + 16}px` }}
           onClick={() => handleSkillSelect(skill)}
         >
@@ -109,18 +109,18 @@ const SkillsView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-1 overflow-hidden bg-[#080808]">
+    <div data-testid="skills-view-container" className="flex flex-1 overflow-hidden bg-[var(--bg-main)]">
       {/* Sidebar */}
-      <div className="w-72 border-r border-[#222222] bg-[#111111] flex flex-col">
-        <div className="p-4 border-b border-[#222222] flex justify-between items-center">
-          <h3 className="text-[10px] font-bold text-[#444444] tracking-[0.3em] uppercase">Neural Skillsets</h3>
-          <button onClick={fetchSkills} className="text-[#444444] hover:text-[#FF4D00] transition-colors">
+      <div className="w-72 border-r border-[var(--border-main)] bg-[var(--bg-sidebar)] flex flex-col">
+        <div className="p-4 border-b border-[var(--border-main)] flex justify-between items-center">
+          <h3 className="text-[10px] font-bold text-[var(--text-muted)] tracking-[0.3em] uppercase">Neural Skillsets</h3>
+          <button onClick={fetchSkills} className="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
           </button>
         </div>
         <div className="flex-1 overflow-y-auto py-2 no-scrollbar">
           {loading ? (
-            <div className="p-6 text-[10px] text-[#222222] animate-pulse font-bold tracking-widest uppercase text-center">Indexing Skills...</div>
+            <div data-testid="loading-indicator" className="p-6 text-[10px] text-[var(--border-main)] animate-pulse font-bold tracking-widest uppercase text-center">Indexing Skills...</div>
           ) : (
             skills.map(skill => renderSkillItem(skill))
           )}
@@ -128,20 +128,20 @@ const SkillsView: React.FC = () => {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 flex flex-col relative bg-[radial-gradient(circle_at_center,#111111,transparent)]">
+      <div className="flex-1 flex flex-col relative bg-[radial-gradient(circle_at_center,var(--bg-sidebar),transparent)]">
         {activeSkill ? (
           <>
-            <div className="h-14 border-b border-[#222222] flex items-center justify-between px-8 bg-[#111111]/50 backdrop-blur-md">
+            <div className="h-14 border-b border-[var(--border-main)] flex items-center justify-between px-8 bg-[var(--bg-sidebar)]/50 backdrop-blur-md">
               <div className="flex items-center gap-4">
-                <div className="w-2 h-2 bg-[#FF4D00] rounded-full animate-pulse"></div>
-                <h2 className="text-xs font-bold text-[#E0E0E0] tracking-widest uppercase">
+                <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse"></div>
+                <h2 className="text-xs font-bold text-[var(--text-bright)] tracking-widest uppercase">
                   Skill: {activeSkill.path.replace(/\//g, ' > ')}
                 </h2>
               </div>
               <button 
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-[#FF4D00] text-[#080808] px-6 py-2 text-xs font-bold rounded-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,77,0,0.2)]"
+                className="bg-[var(--accent)] text-[var(--bg-main)] px-6 py-2 text-xs font-bold rounded-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,77,0,0.2)]"
               >
                 {saving ? 'SYNCHRONIZING...' : 'UPDATE NEURAL SKILL'}
               </button>
@@ -149,13 +149,13 @@ const SkillsView: React.FC = () => {
             <textarea
               value={content}
               onChange={e => setContent(e.target.value)}
-              className="flex-1 w-full bg-transparent text-[#B0B0B0] p-10 font-mono text-sm outline-none resize-none focus:ring-0 selection:bg-[#FF4D00]/20"
+              className="flex-1 w-full bg-transparent text-[var(--text-main)] p-10 font-mono text-sm outline-none resize-none focus:ring-0 selection:bg-[var(--accent)]/20"
               spellCheck="false"
               placeholder="# Neural Skill Definition..."
             />
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-[#222222] space-y-4">
+          <div className="flex-1 flex flex-col items-center justify-center text-[var(--border-main)] space-y-4">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="opacity-20"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             <div className="text-sm font-bold tracking-[0.4em] uppercase opacity-40">Select a neural skillset to reconfigure</div>
           </div>
