@@ -1,30 +1,19 @@
 import fs from 'fs';
 import path from 'path';
-import { GoogleGenAI } from '@google/genai';
+import { spawn } from 'child_process';
 
-// Initialize the Gemini client
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-    console.warn("⚠️  GEMINI_API_KEY environment variable is not set.");
-    console.warn("⚠️  Skipping LLM visual audit. To enforce visual audit, set this variable.");
-    process.exit(0);
-}
-
-const ai = new GoogleGenAI({ apiKey });
-const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-const screenshotsDir = path.resolve(process.cwd(), 'tests', 'screenshots', 'views');
+const screenshotsDir = path.resolve(process.cwd(), 'tests', 'screenshots', 'audit');
 const perfectionDir = path.resolve(process.cwd(), 'tests', 'screenshots', 'perfection');
 
 if (!fs.existsSync(screenshotsDir)) {
-    console.log(`Directory ${screenshotsDir} does not exist. No screenshots to process.`);
+    console.log(`Directory ${screenshotsDir} does not exist. Run playwright tests first.`);
     process.exit(0);
 }
 
-const files = fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png'));
+const files = fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png') && !f.startsWith('error-'));
 
 if (files.length === 0) {
-    console.log("No .png screenshots found to audit.");
+    console.log("No .png screenshots found to audit in " + screenshotsDir);
     process.exit(0);
 }
 
@@ -33,76 +22,103 @@ function findBaseline(currentFile) {
     if (!fs.existsSync(perfectionDir)) return null;
     const perfectionFiles = fs.readdirSync(perfectionDir).filter(f => f.endsWith('.png'));
     
-    // Try exact match first
-    if (perfectionFiles.includes(currentFile)) return path.join(perfectionDir, currentFile);
-    
-    // Try prefix match (e.g. "dashboard" matches "01_dashboard.png")
-    const prefix = currentFile.split('-')[0].split('_')[0].toLowerCase();
-    const match = perfectionFiles.find(f => f.toLowerCase().includes(prefix));
+    const baseName = currentFile.replace(/^\d+-\d+-/, '').replace('.png', '');
+    const match = perfectionFiles.find(f => f.toLowerCase().includes(baseName.toLowerCase()));
     if (match) return path.join(perfectionDir, match);
     
     return null;
 }
 
-// System Instructions to guide the visual audit
 const systemPrompt = `You are a world-class UI/UX Designer and QA Tester.
-Analyze the provided screenshot(s) of a specific web application page.
+Analyze the provided screenshot(s) of the Hermes Automation Suite.
 
 If ONE image is provided:
-Analyze it for premium modern web design principles (good contrast, proper padding, glassmorphism if applicable, dark mode aesthetics). Look for layout issues, text clipping, or "cheap" unstyled elements.
+Analyze it for premium modern web design principles (contrast, padding, glassmorphism, dark mode). Look for layout issues, text clipping, or unstyled elements.
 
 If TWO images are provided:
 The first is the CURRENT screenshot, and the second is the "PERFECTION" baseline.
-Identify any visual drift or regressions. If the core design has changed significantly or looks worse than the baseline, mark it as FAIL.
+Identify any visual drift or regressions. 
 
 Evaluation Criteria:
 - Layout Alignment & Spacing
-- Color Contrast & Visual Hierarchy
-- Aesthetic Consistency (Premium Dark Mode)
-- No obvious visual bugs or text overlapping
+- Color Contrast & Visual Hierarchy (Sleek Dark Mode)
+- Aesthetic Consistency
+- No obvious visual bugs
 
 Your output MUST start with "PASS:" or "FAIL:" followed by a concise reason.
 Be strict. We only accept top quality designs.`;
 
-function fileToGenerativePart(filePath, mimeType) {
-    return {
-        inlineData: {
-            data: Buffer.from(fs.readFileSync(filePath)).toString("base64"),
-            mimeType
-        },
-    };
+const GEMINI_TIMEOUT_MS = 45000; // 45s max per screenshot
+
+async function runGeminiCli(prompt, images) {
+    return new Promise((resolve, reject) => {
+        // Embed image references in the prompt using @path syntax
+        let combinedPrompt = prompt;
+        for (const img of images) {
+            combinedPrompt += `\n\n@${img}`;
+        }
+
+        // Use default model (no -m flag), no positional args (conflicts with -p)
+        const args = ['-p', combinedPrompt];
+
+        const proc = spawn('gemini', args, { timeout: GEMINI_TIMEOUT_MS });
+        proc.stdin.end();
+
+        let stdout = '';
+        let stderr = '';
+
+        proc.stdout.on('data', (d) => stdout += d.toString());
+        proc.stderr.on('data', (d) => stderr += d.toString());
+
+        // Hard timeout safety net
+        const timer = setTimeout(() => {
+            proc.kill('SIGTERM');
+            reject(new Error('Gemini CLI timed out after 45s'));
+        }, GEMINI_TIMEOUT_MS);
+
+        proc.on('close', (code) => {
+            clearTimeout(timer);
+            const output = stdout.trim();
+
+            // Detect quota exhaustion in stderr
+            if (stderr.includes('Usage limit reached') || stderr.includes('RESOURCE_EXHAUSTED')) {
+                reject(new Error('Gemini quota exhausted. Re-run when quota resets.'));
+                return;
+            }
+
+            if (code === 0 && output) resolve(output);
+            else reject(new Error(stderr.split('\n').pop() || `Gemini CLI exited with code ${code}`));
+        });
+    });
 }
 
 async function auditScreenshots() {
     let allPassed = true;
     const results = [];
-    console.log(`Auditing ${files.length} screenshots...`);
+    console.log(`\x1b[1m\x1b[35m[NEURAL AUDIT]\x1b[0m Starting visual inspection of ${files.length} views...`);
 
     for (const file of files) {
         const filePath = path.join(screenshotsDir, file);
         const baselinePath = findBaseline(file);
         
-        process.stdout.write(`Analyzing ${file}${baselinePath ? ' (Comparison Mode)' : ''}... `);
+        process.stdout.write(`   \x1b[36m•\x1b[0m Analyzing ${file}${baselinePath ? ' (+Baseline)' : ''}... `);
 
         try {
-            const contents = [systemPrompt, fileToGenerativePart(filePath, "image/png")];
-            if (baselinePath) {
-                contents.push(fileToGenerativePart(baselinePath, "image/png"));
-            }
+            const images = [filePath];
+            if (baselinePath) images.push(baselinePath);
 
-            const result = await model.generateContent(contents);
-            const text = result.response.text();
+            const text = await runGeminiCli(systemPrompt, images);
             
             const isPass = text.toUpperCase().startsWith("PASS");
             const isFail = text.toUpperCase().startsWith("FAIL");
 
             if (isPass) {
-                console.log("\x1b[32m%s\x1b[0m", "PASS"); // Green
+                console.log("\x1b[32m%s\x1b[0m", "PASS");
                 results.push({ file, status: "PASS", message: text.replace(/^PASS:?\s*/i, "").trim() });
             } else if (isFail) {
-                console.log("\x1b[31m%s\x1b[0m", "FAIL"); // Red
+                console.log("\x1b[31m%s\x1b[0m", "FAIL");
                 const reason = text.replace(/^FAIL:?\s*/i, "").trim();
-                console.log("   Reason: " + reason);
+                console.log("     \x1b[31m└─\x1b[0m " + reason);
                 results.push({ file, status: "FAIL", message: reason });
                 allPassed = false;
             } else {
@@ -112,7 +128,7 @@ async function auditScreenshots() {
             }
         } catch (error) {
             console.log("\x1b[31m%s\x1b[0m", "ERROR");
-            console.error("   API or execution error:", error.message);
+            console.error("     \x1b[31m└─\x1b[0m " + error.message);
             results.push({ file, status: "ERROR", message: error.message });
             allPassed = false;
         }
@@ -120,26 +136,24 @@ async function auditScreenshots() {
 
     // Generate markdown report
     const reportPath = path.resolve(process.cwd(), 'QA_Visual_Report.md');
-    let markdown = `# Hermes UI - Visual Audit Report\n\nGenerated: ${new Date().toLocaleString()}\n\n`;
-    markdown += `| View Screenshot | Baseline | Status | Evaluation |\n`;
-    markdown += `| :--- | :--- | :--- | :--- |\n`;
+    let markdown = `# 🛡️ Hermes UI - Visual Audit Report\n\n**Generated:** ${new Date().toLocaleString()}\n\n`;
+    markdown += `| View Screenshot | Status | Evaluation |\n`;
+    markdown += `| :--- | :--- | :--- |\n`;
     
     for (const r of results) {
-        const baseline = findBaseline(r.file) ? path.basename(findBaseline(r.file)) : "N/A";
         const icon = r.status === "PASS" ? "✅" : (r.status === "FAIL" ? "❌" : "⚠️");
-        markdown += `| ${r.file} | ${baseline} | ${icon} ${r.status} | ${r.message} |\n`;
+        markdown += `| ${r.file} | ${icon} **${r.status}** | ${r.message} |\n`;
     }
     
     fs.writeFileSync(reportPath, markdown);
-    console.log(`\n📄 Visual Audit Report generated at: ${reportPath}`);
+    console.log(`\n\x1b[1m\x1b[32m[COMPLETE]\x1b[0m Report generated at: ${reportPath}`);
 
     if (!allPassed) {
-        console.error("\n❌ LLM Visual Audit failed for one or more screenshots.");
         process.exit(1);
     } else {
-        console.log("\n✅ All screenshots passed the LLM Visual Audit.");
         process.exit(0);
     }
 }
 
 auditScreenshots();
+
