@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
+const API_BASE = `http://${window.location.hostname}:3008/api`;
+
 const LogView: React.FC = () => {
   const [logs, setLogs] = useState<any[]>([]);
   const [level, setLevel] = useState('');
   const [service, setService] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleExport = () => {
+    window.open(`${API_BASE}/logs/export`, '_blank');
+  };
 
   const fetchLogs = () => {
     setLoading(true);
@@ -14,7 +20,7 @@ const LogView: React.FC = () => {
     if (service) params.append('service', service);
     if (search) params.append('search', search);
 
-    fetch(`http://localhost:3008/api/logs?${params.toString()}`)
+    fetch(`${API_BASE}/logs?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
         setLogs(data.logs || []);
@@ -75,7 +81,8 @@ const LogView: React.FC = () => {
               className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] text-[10px] text-[#B0B0B0] px-2 py-1 outline-none focus:border-[#FF4D00] w-48"
             />
           </div>
-          <button onClick={fetchLogs} className="bg-[#FF4D00] text-[#080808] px-4 py-1 text-[10px] font-bold self-end hover:scale-105 transition-all">RELOAD</button>
+          <button onClick={handleExport} disabled={logs.length === 0} className="bg-[var(--bg-sidebar)] border border-[var(--border-main)] text-[var(--text-bright)] px-4 py-1 text-[10px] font-bold self-end hover:bg-[var(--bg-main)] transition-all uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed">EXPORT</button>
+          <button onClick={fetchLogs} className="bg-[var(--accent)] text-[var(--bg-main)] px-4 py-1 text-[10px] font-bold self-end hover:scale-105 transition-all shadow-[0_0_10px_rgba(255,77,0,0.3)] uppercase tracking-widest">RELOAD</button>
         </div>
       </div>
 

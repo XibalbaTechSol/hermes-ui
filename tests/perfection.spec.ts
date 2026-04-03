@@ -331,11 +331,11 @@ test.describe('Hermes UI — Full Visual & Functional Perfection Suite', () => {
     // Verify the active indicator (orange bar) changes when navigating
     await navigateTo(page, 'CHAT');
     const chatBtn = page.locator('button').filter({ has: page.locator('div:text-is("CHAT")') });
-    await expect(chatBtn).toHaveClass(/text-\[#FF4D00\]/);
+    await expect(chatBtn).toHaveClass(/text-\[var\(--accent\)\]/);
 
     await navigateTo(page, 'DASHBOARD');
     const dashBtn = page.locator('button').filter({ has: page.locator('div:text-is("DASHBOARD")') });
-    await expect(dashBtn).toHaveClass(/text-\[#FF4D00\]/);
+    await expect(dashBtn).toHaveClass(/text-\[var\(--accent\)\]/);
 
     await page.screenshot({
       path: `${SCREENSHOT_DIR}/11_nav_consistency.png`,

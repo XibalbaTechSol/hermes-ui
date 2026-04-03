@@ -8,15 +8,19 @@ import {
   type Edge
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { nodeTypes } from './GraphView';
 
 const API_BASE = `http://${window.location.hostname}:3008/api`;
 
 const DashboardView: React.FC = () => {
   const [stats, setStats] = useState<any>(null);
   const [usage, setUsage] = useState<any>(null);
+  const [gateway, setGateway] = useState<any>(null);
+  const [skills, setSkills] = useState<any[]>([]);
   const [customizing, setCustomizing] = useState(false);
   const [nodes, setNodes] = useNodesState<Node>([]);
   const [edges, setEdges] = useEdgesState<Edge>([]);
+  const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
     // Fetch system stats
@@ -31,6 +35,18 @@ const DashboardView: React.FC = () => {
       .then(data => setUsage(data))
       .catch(err => console.error(err));
 
+    // Fetch gateway config for status
+    fetch(`${API_BASE}/gateway/config`)
+      .then(res => res.json())
+      .then(data => setGateway(data))
+      .catch(err => console.error(err));
+
+    // Fetch skills
+    fetch(`${API_BASE}/skills`)
+      .then(res => res.json())
+      .then(data => setSkills(data.skills || []))
+      .catch(err => console.error(err));
+
     // Fetch graph for preview
     fetch(`${API_BASE}/graph`)
       .then(res => res.json())
@@ -38,9 +54,19 @@ const DashboardView: React.FC = () => {
         setNodes(data.nodes || []);
         setEdges(data.edges || []);
       })
-      .catch(err => {
-        console.error(err);
-      });
+      .catch(err => console.error(err));
+      
+    // Fetch logs for terminal feed
+    const fetchLogs = () => {
+      fetch(`${API_BASE}/logs?limit=15`)
+        .then(res => res.json())
+        .then(data => setLogs(data.logs || []))
+        .catch(err => console.error(err));
+    };
+    
+    fetchLogs();
+    const logInterval = setInterval(fetchLogs, 10000);
+    return () => clearInterval(logInterval);
   }, []);
 
   return (
@@ -88,6 +114,7 @@ const DashboardView: React.FC = () => {
             <ReactFlow
               nodes={nodes}
               edges={edges}
+              nodeTypes={nodeTypes as any}
               fitView
               colorMode="dark"
               nodesDraggable={false}
@@ -136,14 +163,73 @@ const DashboardView: React.FC = () => {
                 <h3 className="text-xs font-bold text-[var(--text-bright)] tracking-widest uppercase">Terminal Feed</h3>
                 <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-1">Global System Logs</div>
               </div>
-              <div className="flex-1 bg-[var(--bg-input)] p-6 font-mono text-[10px] text-[var(--text-muted)] overflow-y-auto space-y-3">
-                 <div className="text-[#00FF41]/60 leading-relaxed"><span className="text-[var(--text-muted)] mr-2">04:20:01</span> [CORE] Neural pathways initialized.</div>
-                 <div className="text-[#007AFF]/60 leading-relaxed"><span className="text-[var(--text-muted)] mr-2">04:20:05</span> [GATEWAY] Telegram bridge active.</div>
-                 <div className="text-[var(--accent)]/60 leading-relaxed"><span className="text-[var(--text-muted)] mr-2">04:21:12</span> [MEMORY] Flush sequence completed.</div>
-                 <div className="leading-relaxed"><span className="text-[var(--text-muted)] mr-2">04:22:45</span> [MCP] Registered github-mcp server.</div>
-                 <div className="leading-relaxed"><span className="text-[var(--text-muted)] mr-2">04:25:30</span> [AGENT] Resumed session 20260325.</div>
-                 <div className="text-[#00FF41]/60 leading-relaxed"><span className="text-[var(--text-muted)] mr-2">04:30:01</span> [CORE] Heartbeat signal sent.</div>
+              <div className="flex-1 bg-[var(--bg-input)] p-6 font-mono text-[10px] text-[var(--text-muted)] overflow-y-auto space-y-3 no-scrollbar">
+                 {logs.length > 0 ? (
+                   [...logs].reverse().slice(-10).map((log, idx) => (
+                     <div key={idx} className={`${
+                       log.level === 'error' ? 'text-red-500/60' : 
+                       log.level === 'warn' ? 'text-amber-500/60' : 
+                       log.level === 'success' ? 'text-[#00FF41]/60' : 'text-[#007AFF]/60'
+                     } leading-relaxed`}>
+                       <span className="text-[var(--text-muted)] mr-2 opacity-50">{log.time.split(' ')[1] || log.time}</span>
+                       <span className={`${log.level === 'error' ? 'text-red-500' : 'text-[var(--text-muted)]'} mr-2`}>[{log.service.toUpperCase()}]</span>
+                       {log.msg}
+                     </div>
+                   ))
+                 ) : (
+                   <div className="text-center py-4 opacity-50 uppercase tracking-widest font-bold">Initializing neural feed...</div>
+                 )}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ADDITIONAL WIDGETS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-10">
+          {/* GATEWAY CONNECTIVITY */}
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl overflow-hidden">
+            <div className="p-6 border-b border-[var(--border-main)]">
+              <h3 className="text-xs font-bold text-[var(--text-bright)] tracking-widest uppercase">Gateway Active Bridges</h3>
+              <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-1">Platform connectivity matrix</div>
+            </div>
+            <div className="p-8 grid grid-cols-2 gap-4">
+              {gateway?.platforms ? (
+                Object.entries(gateway.platforms).map(([name, config]: [string, any]) => (
+                  <div key={name} className="flex items-center gap-3 p-3 bg-[var(--bg-input)] rounded-lg border border-[var(--border-main)]/50">
+                    <div className={`w-1.5 h-1.5 rounded-full ${config.enabled ? 'bg-[#00FF41] shadow-[0_0_8px_#00FF41]' : 'bg-[var(--text-muted)] opacity-30'}`}></div>
+                    <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{name}</div>
+                    <div className="ml-auto text-[8px] font-mono text-[var(--text-muted)]/50 uppercase">{config.enabled ? 'Active' : 'Offline'}</div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-4 text-[10px] text-[var(--text-muted)] uppercase tracking-widest opacity-50 font-bold">Initializing Platform Matrix...</div>
+              )}
+            </div>
+          </div>
+
+          {/* NEURAL SKILLS INVENTORY */}
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl overflow-hidden flex flex-col h-[300px]">
+            <div className="p-6 border-b border-[var(--border-main)]">
+              <h3 className="text-xs font-bold text-[var(--text-bright)] tracking-widest uppercase">Cognitive Skills Inventory</h3>
+              <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-widest mt-1">Deployed functional modules</div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 no-scrollbar">
+              {skills.length > 0 ? (
+                skills.map((skill: any) => (
+                  <div key={skill.id} className="flex items-center gap-4 p-3 hover:bg-[var(--bg-input)] transition-colors rounded-lg group">
+                    <div className="w-8 h-8 flex items-center justify-center bg-[var(--bg-input)] border border-[var(--border-main)] rounded group-hover:border-[var(--accent)] transition-colors">
+                       <span className="text-sm">🛠️</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest group-hover:text-[var(--text-bright)]">{skill.name}</div>
+                      <div className="text-[8px] text-[var(--text-muted)] truncate uppercase tracking-tighter">Path: {skill.path}</div>
+                    </div>
+                    <div className="px-2 py-0.5 bg-[var(--accent)]/10 border border-[var(--accent)]/20 rounded text-[7px] font-bold text-[var(--accent)] uppercase tracking-widest">Ready</div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-[10px] text-[var(--text-muted)] uppercase tracking-widest opacity-50 font-bold">Scanning Neural Modules...</div>
+              )}
             </div>
           </div>
         </div>

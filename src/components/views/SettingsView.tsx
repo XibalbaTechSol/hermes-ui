@@ -5,6 +5,8 @@ interface SettingsData {
   env: Record<string, string>;
 }
 
+const API_BASE = `http://${window.location.hostname}:3008/api`;
+
 const SettingsView: React.FC = () => {
   const [data, setData] = useState<SettingsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,11 +18,15 @@ const SettingsView: React.FC = () => {
 
   const fetchSettings = () => {
     setLoading(true);
-    fetch('http://localhost:3008/api/settings')
+    fetch(`${API_BASE}/settings`)
       .then(res => res.json())
       .then(d => {
         setData(d);
         setLoading(false);
+        // Sync local storage if server has a skin and no local override exists
+        if (d?.display?.skin && !localStorage.getItem('hermes_theme')) {
+          localStorage.setItem('hermes_theme', d.display.skin);
+        }
       })
       .catch(err => {
         console.error(err);
@@ -35,7 +41,7 @@ const SettingsView: React.FC = () => {
   const handleSave = () => {
     if (!data) return;
     setSaving(true);
-    fetch('http://localhost:3008/api/settings', {
+    fetch(`${API_BASE}/settings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -54,7 +60,7 @@ const SettingsView: React.FC = () => {
   const handleRunAction = (cmd: string, args: string = '') => {
     setRunningAction(true);
     setActionOutput(`> hermes ${cmd} ${args} --yolo\nInitializing sequence...\n`);
-    fetch('http://localhost:3008/api/commands/run', {
+    fetch(`${API_BASE}/commands/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command: cmd, args })
@@ -76,7 +82,7 @@ const SettingsView: React.FC = () => {
     const newData = JSON.parse(JSON.stringify(data));
     
     const parts = path.split('.');
-    let current: any = newData.config || (newData.config = {});
+    let current: any = newData;
     
     for (let i = 0; i < parts.length - 1; i++) {
       if (!current[parts[i]] || typeof current[parts[i]] !== 'object') current[parts[i]] = {};
@@ -213,7 +219,7 @@ const SettingsView: React.FC = () => {
           <Section id="display" title="Interface & Visuals" icon="🎨" ref={el => scrollRefs.current['display'] = el}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <Field label="UI Skin">
-                <select value={data?.config?.display?.skin || 'default'} onChange={e => updateConfig('display.skin', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]">
+                <select value={data?.display?.skin || 'default'} onChange={e => updateConfig('display.skin', e.target.value)} className="w-full bg-[var(--bg-main)] border border-[var(--border-main)] p-3 text-xs text-[var(--text-main)] font-mono rounded-xl outline-none focus:border-[var(--accent)]">
                   <option value="default">Neural (Default)</option>
                   <option value="ares">Ares (War)</option>
                   <option value="mono">Mono (CLI)</option>
@@ -221,8 +227,8 @@ const SettingsView: React.FC = () => {
                   <option value="cyberpunk">Cyberpunk (Neon)</option>
                 </select>
               </Field>
-              <Toggle label="Streaming Mode" checked={data?.config?.display?.streaming !== false} onChange={v => updateConfig('display.streaming', v)} />
-              <Toggle label="Show Token Cost" checked={data?.config?.display?.show_cost !== false} onChange={v => updateConfig('display.show_cost', v)} />
+              <Toggle label="Streaming Mode" checked={data?.display?.streaming !== false} onChange={v => updateConfig('display.streaming', v)} />
+              <Toggle label="Show Token Cost" checked={data?.display?.show_cost !== false} onChange={v => updateConfig('display.show_cost', v)} />
             </div>
           </Section>
 
@@ -317,7 +323,7 @@ const Toggle: React.FC<{label: string, checked: boolean, onChange: (v: boolean) 
   <div className="flex items-center justify-between p-4 bg-[var(--bg-main)]/50 border border-[var(--border-main)] rounded-xl">
     <span className="text-[10px] text-[var(--text-main)] font-bold uppercase tracking-widest">{label}</span>
     <label className="relative inline-flex items-center cursor-pointer shrink-0">
-      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer opacity-0 absolute w-11 h-6 cursor-pointer z-10" />
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="sr-only peer" />
       <div className="w-10 h-5 bg-[var(--border-main)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[var(--text-muted)] after:border-[var(--border-bright)] after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[var(--accent)] peer-checked:after:bg-[var(--bg-main)]"></div>
     </label>
   </div>

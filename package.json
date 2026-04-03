@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/genai": "^1.48.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@xyflow/react": "^12.10.1",
     "cors": "^2.8.6",

@@ -10,8 +10,9 @@ import GraphView from './components/views/GraphView';
 import CommandsView from './components/views/CommandsView';
 import GatewayView from './components/views/GatewayView';
 import SkillsView from './components/views/SkillsView';
+import ConfigView from './components/views/ConfigView';
 
-type NavItem = 'chat' | 'mcp' | 'logs' | 'dashboard' | 'subagents' | 'settings' | 'graph' | 'commands' | 'gateway' | 'skills';
+type NavItem = 'chat' | 'mcp' | 'logs' | 'dashboard' | 'subagents' | 'settings' | 'graph' | 'commands' | 'gateway' | 'skills' | 'config';
 
 const HermesApp: React.FC = () => {
   const [activeView, setActiveView] = useState<NavItem>('dashboard');
@@ -38,6 +39,8 @@ const HermesApp: React.FC = () => {
         return <GraphView />;
       case 'commands':
         return <CommandsView />;
+      case 'config':
+        return <ConfigView />;
       default:
         return <DashboardView />;
     }

@@ -13,11 +13,19 @@
   --bg-input: #0c0c0c;
   --accent: #FF4D00;
   --accent-soft: rgba(255, 77, 0, 0.1);
+  --accent-shadow: rgba(255, 77, 0, 0.3);
   --text-bright: #FFFFFF;
   --text-main: #B0B0B0;
   --text-muted: #444444;
   --border-main: #222222;
   --border-bright: #333333;
+  
+  /* Functional Colors */
+  --info: #007AFF;
+  --success: #00FF41;
+  --warning: #FF8A00;
+  --error: #FF3B30;
+  --gemini: #8B5CF6;
 }
 
 body.theme-default {
@@ -33,6 +41,11 @@ body.theme-default {
   --text-muted: #444444;
   --border-main: #222222;
   --border-bright: #333333;
+  --info: #007AFF;
+  --success: #00FF41;
+  --warning: #FF8A00;
+  --error: #FF3B30;
+  --gemini: #8B5CF6;
 }
 
 body.theme-ares {
@@ -48,6 +61,10 @@ body.theme-ares {
   --text-muted: #664444;
   --border-main: #3d1a1a;
   --border-bright: #5c2626;
+  --info: #ff4d4d;
+  --success: #ff0000;
+  --warning: #8b0000;
+  --error: #ff0000;
 }
 
 body.theme-mono {
@@ -63,6 +80,10 @@ body.theme-mono {
   --text-muted: #004411;
   --border-main: #003311;
   --border-bright: #00ff41;
+  --info: #00ff41;
+  --success: #00ff41;
+  --warning: #00ff41;
+  --error: #00ff41;
 }
 
 body.theme-slate {
@@ -78,6 +99,10 @@ body.theme-slate {
   --text-muted: #475569;
   --border-main: #1e293b;
   --border-bright: #334155;
+  --info: #38bdf8;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
 }
 
 body.theme-cyberpunk {
@@ -93,6 +118,10 @@ body.theme-cyberpunk {
   --text-muted: #660066;
   --border-main: #300030;
   --border-bright: #f0f;
+  --info: #0ff;
+  --success: #0f0;
+  --warning: #ff0;
+  --error: #f00;
 }
 
 body {

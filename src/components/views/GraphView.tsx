@@ -21,44 +21,44 @@ import '@xyflow/react/dist/style.css';
 // --- CUSTOM NODES ---
 
 const ConfigNode = ({ data, selected }: any) => (
-  <div className={`px-4 py-3 rounded-lg bg-[#007AFF]/5 border-2 transition-all ${selected ? 'border-[#007AFF] shadow-[0_0_15px_rgba(0,122,255,0.4)]' : 'border-[#007AFF]/30'}`}>
+  <div className={`px-4 py-3 rounded-lg bg-[var(--info)]/5 border-2 transition-all ${selected ? 'border-[var(--info)] shadow-[0_0_15px_rgba(0,122,255,0.4)]' : 'border-[var(--info)]/30'}`}>
     <div className="flex items-center gap-2 mb-1">
-      <div className="w-2 h-2 bg-[#007AFF] rounded-full"></div>
-      <span className="text-[10px] font-bold text-[#007AFF] uppercase tracking-widest">Configuration</span>
+      <div className="w-2 h-2 bg-[var(--info)] rounded-full"></div>
+      <span className="text-[10px] font-bold text-[var(--info)] uppercase tracking-widest">Configuration</span>
     </div>
     <div className="flex items-center gap-2">
       <span className="text-sm">{data.icon || '⚙️'}</span>
       <div className="text-xs font-bold text-[var(--text-bright)]">{data.label}</div>
     </div>
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-[#007AFF] border-none" />
+    <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-[var(--info)] border-none" />
   </div>
 );
 
 const MemoryNode = ({ data, selected }: any) => (
-  <div className={`px-4 py-3 rounded-lg bg-[#FF8A00]/5 border-2 transition-all ${selected ? 'border-[#FF8A00] shadow-[0_0_15px_rgba(255,138,0,0.4)]' : 'border-[#FF8A00]/30'}`}>
+  <div className={`px-4 py-3 rounded-lg bg-[var(--warning)]/5 border-2 transition-all ${selected ? 'border-[var(--warning)] shadow-[0_0_15px_rgba(255,138,0,0.4)]' : 'border-[var(--warning)]/30'}`}>
     <div className="flex items-center gap-2 mb-1">
-      <div className="w-2 h-2 bg-[#FF8A00] rounded-sm"></div>
-      <span className="text-[10px] font-bold text-[#FF8A00] uppercase tracking-widest">Memory Store</span>
+      <div className="w-2 h-2 bg-[var(--warning)] rounded-sm"></div>
+      <span className="text-[10px] font-bold text-[var(--warning)] uppercase tracking-widest">Memory Store</span>
     </div>
     <div className="flex items-center gap-2">
       <span className="text-sm">{data.icon || '💾'}</span>
       <div className="text-xs font-bold text-[var(--text-bright)]">{data.label}</div>
     </div>
-    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[#FF8A00] border-none" />
+    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[var(--warning)] border-none" />
   </div>
 );
 
 const SkillNode = ({ data, selected }: any) => (
-  <div className={`px-4 py-3 rounded-lg bg-[#00FF41]/5 border-2 transition-all ${selected ? 'border-[#00FF41] shadow-[0_0_15px_rgba(0,255,65,0.4)]' : 'border-[#00FF41]/30'}`}>
+  <div className={`px-4 py-3 rounded-lg bg-[var(--success)]/5 border-2 transition-all ${selected ? 'border-[var(--success)] shadow-[0_0_15px_rgba(0,255,65,0.4)]' : 'border-[var(--success)]/30'}`}>
     <div className="flex items-center gap-2 mb-1">
-      <div className="w-2 h-2 bg-[#00FF41] rounded-full"></div>
-      <span className="text-[10px] font-bold text-[#00FF41] uppercase tracking-widest">Neural Skill</span>
+      <div className="w-2 h-2 bg-[var(--success)] rounded-full"></div>
+      <span className="text-[10px] font-bold text-[var(--success)] uppercase tracking-widest">Neural Skill</span>
     </div>
     <div className="flex items-center gap-2">
       <span className="text-sm">{data.icon || '🛠️'}</span>
       <div className="text-xs font-bold text-[var(--text-bright)]">{data.label}</div>
     </div>
-    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[#00FF41] border-none" />
+    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[var(--success)] border-none" />
   </div>
 );
 
@@ -77,18 +77,18 @@ const SubagentNode = ({ data, selected }: any) => (
 );
 
 const LoopNode = ({ data, selected }: any) => (
-  <div className={`px-5 py-4 rounded-2xl bg-[#007AFF]/5 border-2 transition-all ${selected ? 'border-[#007AFF] shadow-[0_0_25px_rgba(0,122,255,0.3)]' : 'border-[#007AFF]/20'}`}>
+  <div className={`px-5 py-4 rounded-2xl bg-[var(--info)]/5 border-2 transition-all ${selected ? 'border-[var(--info)] shadow-[0_0_25px_rgba(0,122,255,0.3)]' : 'border-[var(--info)]/20'}`}>
     <div className="flex flex-col items-center text-center gap-2">
-      <div className="w-10 h-10 rounded-full bg-[#007AFF]/10 flex items-center justify-center text-2xl animate-spin-slow">
+      <div className="w-10 h-10 rounded-full bg-[var(--info)]/10 flex items-center justify-center text-2xl animate-spin-slow">
         {data.icon || '🌀'}
       </div>
       <div>
-        <div className="text-[10px] font-black text-[#007AFF] uppercase tracking-[0.2em]">NEURAL_LOOP</div>
+        <div className="text-[10px] font-black text-[var(--info)] uppercase tracking-[0.2em]">NEURAL_LOOP</div>
         <div className="text-xs font-bold text-[var(--text-bright)] mt-0.5">{data.label}</div>
       </div>
     </div>
-    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[#007AFF] border-none" />
-    <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-[#007AFF] border-none" />
+    <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[var(--info)] border-none" />
+    <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-[var(--info)] border-none" />
   </div>
 );
 
@@ -112,8 +112,8 @@ const CoreNode = () => (
       <div className="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center text-[var(--bg-main)] font-black text-2xl">H</div>
       <div className="text-base font-black text-[var(--text-bright)] tracking-tighter uppercase">Hermes Core</div>
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-[#00FF41] rounded-full animate-pulse"></div>
-        <span className="text-[10px] font-bold text-[#00FF41] tracking-widest">NEURAL_HUB_ACTIVE</span>
+        <div className="w-2 h-2 bg-[var(--success)] rounded-full animate-pulse"></div>
+        <span className="text-[10px] font-bold text-[var(--success)] tracking-widest">NEURAL_HUB_ACTIVE</span>
       </div>
     </div>
     <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-[var(--accent)] border-none" />
@@ -123,7 +123,7 @@ const CoreNode = () => (
   </div>
 );
 
-const nodeTypes = {
+export const nodeTypes = {
   config: ConfigNode,
   memory: MemoryNode,
   skill: SkillNode,
@@ -131,6 +131,7 @@ const nodeTypes = {
   loop: LoopNode,
   hermes: CoreNode,
   mcp: McpNode,
+  action: ConfigNode,
   // Fallbacks for common names in JSON
   system: ConfigNode,
   db: MemoryNode,
@@ -222,22 +223,21 @@ const GraphContent: React.FC = () => {
   };
 
   const fetchMemory = (file: string) => {
-    fetch(`http://localhost:3008/api/config/${file}`)
+    fetch(`http://localhost:3008/api/config_file/${file}`)
       .then(res => res.json())
       .then(d => setMemoryContent(d.content || ''))
       .catch(err => console.error(err));
   };
 
-  const fetchSkill = (name: string) => {
-    fetch(`http://localhost:3008/api/skills/content?relPath=${name.toLowerCase()}`)
+  const fetchSkill = (relPath: string) => {
+    fetch(`http://localhost:3008/api/skills/content?relPath=${encodeURIComponent(relPath)}`)
       .then(res => res.json())
       .then(d => setSkillContent(d.content || ''))
       .catch(err => console.error(err));
   };
 
-  const fetchAgent = (name: string) => {
-    // Assuming category is general or we extract it
-    fetch(`http://localhost:3008/api/subagents/general/${name.toLowerCase()}`)
+  const fetchAgent = (category: string, name: string) => {
+    fetch(`http://localhost:3008/api/subagents/${encodeURIComponent(category)}/${encodeURIComponent(name)}`)
       .then(res => res.json())
       .then(d => setAgentContent(d.content || ''))
       .catch(err => console.error(err));
@@ -250,13 +250,13 @@ const GraphContent: React.FC = () => {
     setAgentContent('');
     setMemoryContent('');
     
-    if (node.type === 'memory' || node.type === 'db') {
-      const file = (node.data as any).file || 'memory';
+    if (node.type === 'memory' || node.type === 'db' || node.type === 'config') {
+      const file = (node.data as any).uri || (node.data as any).file || node.data.label;
       fetchMemory(file);
     } else if (node.type === 'skill') {
-      fetchSkill(node.data.label);
+      fetchSkill(String((node.data as any).skillPath || node.data.label));
     } else if (node.type === 'subagent') {
-      fetchAgent(node.data.label);
+      fetchAgent(String((node.data as any).category || 'general'), String((node.data as any).agentId || node.data.label));
     }
   };
 
@@ -266,7 +266,7 @@ const GraphContent: React.FC = () => {
     fetch('http://localhost:3008/api/skills/content', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ relPath: selectedElement.data.label.toLowerCase(), content: skillContent })
+      body: JSON.stringify({ relPath: (selectedElement.data as any).skillPath || selectedElement.data.label.toLowerCase(), content: skillContent })
     })
     .then(() => { setSaving(false); alert('Skill protocol updated.'); })
     .catch(err => { setSaving(false); console.error(err); });
@@ -275,7 +275,7 @@ const GraphContent: React.FC = () => {
   const handleSaveAgent = () => {
     if (!selectedElement) return;
     setSaving(true);
-    fetch(`http://localhost:3008/api/subagents/general/${selectedElement.data.label.toLowerCase()}`, {
+    fetch(`http://localhost:3008/api/subagents/${(selectedElement.data as any).category || 'general'}/${(selectedElement.data as any).agentId || selectedElement.data.label.toLowerCase()}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: agentContent })
@@ -363,16 +363,16 @@ const GraphContent: React.FC = () => {
 
                 {selectedElement.type === 'skill' && (
                   <div className="space-y-6">
-                    <div className="text-[10px] font-bold text-[#00FF41] uppercase tracking-[0.3em] border-b border-[#00FF41]/20 pb-2">Skill Protocol (SKILL.md)</div>
+                    <div className="text-[10px] font-bold text-[var(--success)] uppercase tracking-[0.3em] border-b border-[var(--success)]/20 pb-2">Skill Protocol (SKILL.md)</div>
                     <textarea 
                       value={skillContent}
                       onChange={e => setSkillContent(e.target.value)}
-                      className="w-full bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-4 rounded-xl h-[300px] text-[11px] text-[var(--text-main)] font-mono outline-none focus:border-[#00FF41] resize-none"
+                      className="w-full bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-4 rounded-xl h-[300px] text-[11px] text-[var(--text-main)] font-mono outline-none focus:border-[var(--success)] resize-none"
                     />
                     <button 
                       onClick={handleSaveSkill}
                       disabled={saving}
-                      className="w-full bg-[#00FF41] text-[#080808] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                      className="w-full bg-[var(--success)] text-[#080808] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest"
                     >
                       {saving ? 'Synchronizing...' : 'Update Skill Protocol'}
                     </button>
@@ -397,25 +397,25 @@ const GraphContent: React.FC = () => {
                   </div>
                 )}
 
-                {(selectedElement.type === 'memory' || selectedElement.type === 'db') && (
+                {(selectedElement.type === 'memory' || selectedElement.type === 'db' || selectedElement.type === 'config') && (
                   <div className="space-y-6">
-                    <div className="text-[10px] font-bold text-[#FF8A00] uppercase tracking-[0.3em] border-b border-[#FF8A00]/20 pb-2">Memory Partition</div>
+                    <div className="text-[10px] font-bold text-[var(--warning)] uppercase tracking-[0.3em] border-b border-[var(--warning)]/20 pb-2">Core File Inspection</div>
                     <div className="bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-4 rounded-xl max-h-[300px] overflow-y-auto">
                        <pre className="text-[10px] text-[var(--text-main)] font-mono whitespace-pre-wrap leading-relaxed">{memoryContent || 'Initializing read sequence...'}</pre>
                     </div>
-                    <button className="w-full bg-[#FF8A00] text-[#080808] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">Sync Memory Layer</button>
+                    <button className="w-full bg-[var(--warning)] text-[#080808] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest">Commit File Change</button>
                   </div>
                 )}
 
                 {selectedElement.type === 'loop' && (
                   <div className="space-y-6">
-                    <div className="text-[10px] font-bold text-[#007AFF] uppercase tracking-[0.3em] border-b border-[#007AFF]/20 pb-2">Loop Control</div>
-                    <div className="p-4 bg-[#007AFF]/5 border border-[#007AFF]/20 rounded-xl text-[11px] text-[var(--text-main)] leading-relaxed italic">
+                    <div className="text-[10px] font-bold text-[var(--info)] uppercase tracking-[0.3em] border-b border-[var(--info)]/20 pb-2">Loop Control</div>
+                    <div className="p-4 bg-[var(--info)]/5 border border-[var(--info)]/20 rounded-xl text-[11px] text-[var(--text-main)] leading-relaxed italic">
                       {selectedElement.data?.description || 'Active feedback loop ensuring cognitive consistency and neural optimization.'}
                     </div>
                     <button 
                       onClick={() => handleAction('status')}
-                      className="w-full bg-[#007AFF] text-white py-4 rounded-xl text-xs font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(0,122,255,0.2)]"
+                      className="w-full bg-[var(--info)] text-white py-4 rounded-xl text-xs font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(0,122,255,0.2)]"
                     >
                       Force Loop Sync
                     </button>
@@ -441,7 +441,7 @@ const GraphContent: React.FC = () => {
                 {executionOutput && (
                   <div className="space-y-3">
                     <div className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Neural Telemetry</div>
-                    <pre className="bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-6 rounded-2xl font-mono text-[11px] text-[#00FF41] leading-relaxed whitespace-pre-wrap overflow-x-auto selection:bg-[#00FF41]/20 shadow-inner">
+                    <pre className="bg-[var(--bg-obsidian)] border border-[var(--border-main)] p-6 rounded-2xl font-mono text-[11px] text-[var(--success)] leading-relaxed whitespace-pre-wrap overflow-x-auto selection:bg-[var(--success)]/20 shadow-inner">
                       {executionOutput}
                       {running && <span className="animate-pulse inline-block ml-1">_</span>}
                     </pre>
@@ -498,11 +498,11 @@ const DraggableNode: React.FC<{type: string, label: string, icon: string}> = ({t
       className="bg-[var(--panel-bg)] border border-[var(--border-main)] p-3 rounded-xl flex items-center gap-3 cursor-grab hover:border-[var(--accent-orange)]/40 hover:bg-[#161616] transition-all group active:cursor-grabbing shadow-lg"
     >
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${
-        type === 'config' ? 'bg-[#007AFF]/10 text-[#007AFF]' :
+        type === 'config' ? 'bg-[var(--info)]/10 text-[var(--info)]' :
         type === 'action' ? 'bg-[var(--accent-orange)]/10 text-[#FF4D00]' :
-        type === 'memory' ? 'bg-[#FF8A00]/10 text-[#FF8A00]' :
-        type === 'skill' ? 'bg-[#00FF41]/10 text-[#00FF41]' :
-        type === 'loop' ? 'bg-[#007AFF]/10 text-[#007AFF]' :
+        type === 'memory' ? 'bg-[var(--warning)]/10 text-[var(--warning)]' :
+        type === 'skill' ? 'bg-[var(--success)]/10 text-[var(--success)]' :
+        type === 'loop' ? 'bg-[var(--info)]/10 text-[var(--info)]' :
         type === 'mcp' ? 'bg-[#E0E0E0]/10 text-[var(--text-bright)]' :
         'bg-[var(--accent-orange)]/10 text-[#FF4D00]'
       }`}>

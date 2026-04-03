@@ -15,7 +15,9 @@ import {
   RefreshCw,
   Terminal,
   Brain,
-  History
+  History,
+  Paperclip,
+  Mic
 } from 'lucide-react';
 
 const API_BASE = `http://${window.location.hostname}:3008/api`;
@@ -29,6 +31,7 @@ const ChatView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -62,6 +65,12 @@ const ChatView: React.FC = () => {
         console.error('Fetch sessions failed:', err);
         setLoading(false);
       });
+      
+    // Fetch suggestions concurrently
+    fetch(`${API_BASE}/chat/suggestions`)
+      .then(res => res.json())
+      .then(data => setSuggestions(data.suggestions || []))
+      .catch(err => console.error('Fetch suggestions failed:', err));
   };
 
   const fetchMessages = (sessionId: string) => {
@@ -206,6 +215,17 @@ const ChatView: React.FC = () => {
     s.id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getIcon = (name: string) => {
+    switch (name) {
+      case 'Cpu': return <Cpu className="w-4 h-4" />;
+      case 'Brain': return <Brain className="w-4 h-4" />;
+      case 'Terminal': return <Terminal className="w-4 h-4" />;
+      case 'Bot': return <Bot className="w-4 h-4" />;
+      case 'Shield': return <Plus className="w-4 h-4" />; 
+      default: return <MessageSquare className="w-4 h-4" />;
+    }
+  };
+
   return (
     <div 
       className="flex h-full w-full overflow-hidden bg-[var(--bg-main)] text-[var(--text-main)]" 
@@ -317,24 +337,15 @@ const ChatView: React.FC = () => {
                 <p className="text-xs text-[var(--text-muted)] font-bold leading-relaxed uppercase tracking-[0.4em]">Integrated Sovereign Agent Interface</p>
               </div>
               <div className="grid grid-cols-2 gap-4 w-full">
-                <HeroAction 
-                  label="Run Neural Diagnostic" 
-                  icon={<Cpu className="w-4 h-4" />} 
-                  data-testid="suggestion-diagnostic"
-                  onClick={() => handleSuggestion("Run a neural diagnostic on the system and check for any anomalies or pending tasks.")}
-                />
-                <HeroAction 
-                  label="Sync Agency Logic" 
-                  icon={<Brain className="w-4 h-4" />} 
-                  data-testid="suggestion-sync"
-                  onClick={() => handleSuggestion("Synchronize agency logic across all sub-agents and update the SOUL.md if necessary.")}
-                />
-                <HeroAction 
-                  label="Execute Protocol Link" 
-                  icon={<Terminal className="w-4 h-4" />} 
-                  data-testid="suggestion-protocol"
-                  onClick={() => handleSuggestion("Establish a new protocol link via MCP and list available tools.")}
-                />
+                {suggestions.map((s) => (
+                  <HeroAction 
+                    key={s.id}
+                    label={s.label} 
+                    icon={getIcon(s.icon)} 
+                    data-testid={`suggestion-${s.id}`}
+                    onClick={() => handleSuggestion(s.prompt)}
+                  />
+                ))}
                 <HeroAction 
                   label="New Conversation" 
                   onClick={handleNewSession} 
@@ -398,6 +409,12 @@ const ChatView: React.FC = () => {
                   <div className="flex items-center gap-1">
                     <button className="p-2 text-[var(--text-muted)] hover:text-[var(--text-main)] rounded-xl transition-colors">
                       <Plus className="w-4 h-4" />
+                    </button>
+                    <button className="p-2 text-[var(--text-muted)] hover:text-[var(--text-main)] rounded-xl transition-colors">
+                      <Paperclip className="w-4 h-4" />
+                    </button>
+                    <button className="p-2 text-[var(--text-muted)] hover:text-[var(--text-main)] rounded-xl transition-colors">
+                      <Mic className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="flex items-center gap-3">

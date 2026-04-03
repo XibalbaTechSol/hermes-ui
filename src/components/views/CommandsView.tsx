@@ -7,18 +7,28 @@ interface Command {
   defaultArgs: string;
 }
 
+const API_BASE = `http://${window.location.hostname}:3008/api`;
+
 const CommandsView: React.FC = () => {
   const [commands, setCommands] = useState<Command[]>([]);
   const [activeCommand, setActiveCommand] = useState<Command | null>(null);
   const [args, setArgs] = useState('');
   const [output, setOutput] = useState('');
   const [running, setRunning] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3008/api/commands')
+    setLoading(true);
+    fetch(`${API_BASE}/commands`)
       .then(res => res.json())
-      .then(data => setCommands(data.commands || []))
-      .catch(err => console.error(err));
+      .then(data => {
+        setCommands(data.commands || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   }, []);
 
   const handleRun = () => {
@@ -26,7 +36,7 @@ const CommandsView: React.FC = () => {
     setRunning(true);
     setOutput(`> Initializing ${activeCommand.label} execution sequence...\n`);
     
-    fetch('http://localhost:3008/api/commands/run', {
+    fetch(`${API_BASE}/commands/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command: activeCommand.id, args })
@@ -55,25 +65,29 @@ const CommandsView: React.FC = () => {
             <span className="text-[10px] font-bold text-[var(--text-muted)] tracking-widest uppercase">Available Directives</span>
           </div>
           <div className="flex-1 overflow-y-auto py-2 no-scrollbar">
-            {commands.map(cmd => (
-              <button
-                key={cmd.id}
-                onClick={() => {
-                  setActiveCommand(cmd);
-                  setArgs(cmd.defaultArgs);
-                  setOutput('');
-                }}
-                className={`w-full text-left px-6 py-4 transition-all border-l-2 ${activeCommand?.id === cmd.id ? 'bg-[#161616] border-[var(--accent)] text-[var(--text-bright)]' : 'border-transparent text-[#555555] hover:text-[var(--text-main)] hover:bg-[var(--bg-sidebar)]'}`}
-              >
-                <div className="text-xs font-bold uppercase tracking-wider mb-1">{cmd.label}</div>
-                <div className="text-[10px] text-[var(--text-muted)] line-clamp-1">{cmd.desc}</div>
-              </button>
-            ))}
+            {loading ? (
+              <div data-testid="loading-indicator" className="p-6 text-[10px] text-[var(--border-main)] animate-pulse font-bold tracking-widest uppercase text-center">Fetching Tools...</div>
+            ) : (
+              commands.map(cmd => (
+                <button
+                  key={cmd.id}
+                  onClick={() => {
+                    setActiveCommand(cmd);
+                    setArgs(cmd.defaultArgs);
+                    setOutput('');
+                  }}
+                  className={`w-full text-left px-6 py-4 transition-all border-l-2 ${activeCommand?.id === cmd.id ? 'bg-[#161616] border-[var(--accent)] text-[var(--text-bright)]' : 'border-transparent text-[#555555] hover:text-[var(--text-main)] hover:bg-[var(--bg-sidebar)]'}`}
+                >
+                  <div className="text-xs font-bold uppercase tracking-wider mb-1">{cmd.label}</div>
+                  <div className="text-[10px] text-[var(--text-muted)] line-clamp-1">{cmd.desc}</div>
+                </button>
+              ))
+            )}
           </div>
         </div>
 
         {/* EXECUTION AREA */}
-        <div className="flex-1 flex flex-col bg-[radial-gradient(circle_at_top_right,#111111,transparent)]">
+        <div className="flex-1 flex flex-col bg-[radial-gradient(circle_at_top_right,var(--bg-sidebar),transparent)]">
           {activeCommand ? (
             <div className="flex-1 flex flex-col p-10 space-y-8 overflow-hidden">
               <div className="space-y-2">

@@ -5,9 +5,12 @@ interface Skill {
   name: string;
   path: string;
   is_skill: boolean;
+  enabled?: boolean;
   subskills?: Skill[];
   has_subskills?: boolean;
 }
+
+const API_BASE = `http://${window.location.hostname}:3008/api`;
 
 const SkillsView: React.FC = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -19,7 +22,7 @@ const SkillsView: React.FC = () => {
 
   const fetchSkills = () => {
     setLoading(true);
-    fetch('http://localhost:3008/api/skills')
+    fetch(`${API_BASE}/skills`)
       .then(res => res.json())
       .then(data => {
         setSkills(data.skills || []);
@@ -32,7 +35,7 @@ const SkillsView: React.FC = () => {
   };
 
   const fetchContent = (relPath: string) => {
-    fetch(`http://localhost:3008/api/skills/content?relPath=${encodeURIComponent(relPath)}`)
+    fetch(`${API_BASE}/skills/content?relPath=${encodeURIComponent(relPath)}`)
       .then(res => res.json())
       .then(data => setContent(data.content || ''))
       .catch(err => console.error(err));
@@ -63,7 +66,7 @@ const SkillsView: React.FC = () => {
   const handleSave = () => {
     if (!activeSkill) return;
     setSaving(true);
-    fetch('http://localhost:3008/api/skills/content', {
+    fetch(`${API_BASE}/skills/content`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ relPath: activeSkill.path, content })
@@ -71,12 +74,28 @@ const SkillsView: React.FC = () => {
     .then(res => res.json())
     .then(() => {
       setSaving(false);
-      alert('Skill updated successfully.');
+      // Optional toast
     })
     .catch(err => {
       setSaving(false);
       console.error(err);
     });
+  };
+
+  const handleToggle = () => {
+    if (!activeSkill) return;
+    const newEnabledState = !activeSkill.enabled;
+    fetch(`${API_BASE}/skills/toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ relPath: activeSkill.path, enabled: newEnabledState })
+    })
+    .then(res => res.json())
+    .then(() => {
+      fetchSkills(); // refresh to update UI state
+      setActiveSkill({ ...activeSkill, enabled: newEnabledState });
+    })
+    .catch(err => console.error(err));
   };
 
   const renderSkillItem = (skill: Skill, depth = 0) => {
@@ -86,18 +105,26 @@ const SkillsView: React.FC = () => {
     return (
       <div key={skill.id} data-testid={`skill-item-${skill.id}`} className="select-none">
         <div 
-          className={`flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-[var(--bg-surface)] transition-colors border-l-2 ${activeSkill?.id === skill.id ? 'bg-[var(--bg-surface)] border-[var(--accent)] text-[var(--text-bright)]' : 'border-transparent text-[var(--text-muted)]'}`}
+          className={`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-[var(--bg-surface)] transition-colors border-l-2 ${activeSkill?.id === skill.id ? 'bg-[var(--bg-surface)] border-[var(--accent)] text-[var(--text-bright)]' : 'border-transparent text-[var(--text-muted)]'} ${skill.is_skill && !skill.enabled ? 'opacity-50' : ''}`}
           style={{ paddingLeft: `${(depth * 12) + 16}px` }}
-          onClick={() => handleSkillSelect(skill)}
+          onClick={() => {
+             // Avoid toggle expand if clicking direct skill, handled below if needed
+             handleSkillSelect(skill);
+          }}
         >
-          {hasChildren ? (
-            <span className="text-[10px] w-3">{isExpanded ? '▼' : '▶'}</span>
-          ) : (
-            <span className="w-3"></span>
+          <div className="flex items-center gap-2 overflow-hidden">
+            {hasChildren ? (
+              <span className="text-[10px] w-3 shrink-0">{isExpanded ? '▼' : '▶'}</span>
+            ) : (
+              <span className="w-3 shrink-0"></span>
+            )}
+            <span className={`text-xs font-mono truncate ${skill.is_skill ? 'font-bold' : ''} ${skill.is_skill && !skill.enabled ? 'line-through decoration-[var(--border-main)]' : ''}`}>
+              {skill.is_skill ? '📄' : '📁'} {skill.name.toUpperCase()}
+            </span>
+          </div>
+          {skill.is_skill && (
+            <div className={`w-2 h-2 rounded-full shrink-0 ${skill.enabled ? 'bg-[var(--success)] shadow-[0_0_5px_var(--success)]' : 'bg-[var(--border-main)]'}`}></div>
           )}
-          <span className={`text-xs font-mono truncate ${skill.is_skill ? 'font-bold' : ''}`}>
-            {skill.is_skill ? '📄' : '📁'} {skill.name.toUpperCase()}
-          </span>
         </div>
         {isExpanded && skill.subskills && (
           <div>
@@ -133,18 +160,26 @@ const SkillsView: React.FC = () => {
           <>
             <div className="h-14 border-b border-[var(--border-main)] flex items-center justify-between px-8 bg-[var(--bg-sidebar)]/50 backdrop-blur-md">
               <div className="flex items-center gap-4">
-                <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse"></div>
-                <h2 className="text-xs font-bold text-[var(--text-bright)] tracking-widest uppercase">
+                <div className={`w-2 h-2 rounded-full ${activeSkill.enabled ? 'bg-[var(--success)] shadow-[0_0_8px_var(--success)] animate-pulse' : 'bg-[var(--border-main)]'}`}></div>
+                <h2 className={`text-xs font-bold tracking-widest uppercase ${activeSkill.enabled ? 'text-[var(--text-bright)]' : 'text-[var(--text-muted)] line-through'}`}>
                   Skill: {activeSkill.path.replace(/\//g, ' > ')}
                 </h2>
               </div>
-              <button 
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-[var(--accent)] text-[var(--bg-main)] px-6 py-2 text-xs font-bold rounded-sm hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,77,0,0.2)]"
-              >
-                {saving ? 'SYNCHRONIZING...' : 'UPDATE NEURAL SKILL'}
-              </button>
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={handleToggle}
+                  className={`px-4 py-2 text-[10px] font-bold rounded-sm transition-all tracking-[0.2em] uppercase border ${activeSkill.enabled ? 'bg-[var(--bg-surface)] text-[var(--text-muted)] border-[var(--border-main)] hover:text-red-500 hover:border-red-500/50' : 'bg-[var(--success)] text-[var(--bg-main)] border-transparent hover:scale-105 shadow-[0_0_15px_rgba(0,255,0,0.2)]'}`}
+                >
+                  {activeSkill.enabled ? 'DISABLE SKILL' : 'ENABLE SKILL'}
+                </button>
+                <button 
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-[var(--accent)] text-[var(--bg-main)] px-8 py-2 text-[10px] font-black rounded hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,77,0,0.3)] tracking-[0.2em] uppercase"
+                >
+                  {saving ? 'SYNCHRONIZING...' : 'UPDATE NEURAL SKILL'}
+                </button>
+              </div>
             </div>
             <textarea
               value={content}

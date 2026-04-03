@@ -22,6 +22,8 @@ interface SubagentData {
   };
 }
 
+const API_BASE = `http://${window.location.hostname}:3008/api`;
+
 const SubagentsView: React.FC = () => {
   const [subagents, setSubagents] = useState<Subagent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,7 @@ const SubagentsView: React.FC = () => {
   const [agentData, setAgentData] = useState<SubagentData | null>(null);
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState<'structured' | 'raw'>('structured');
+  const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     fetchSubagents();
@@ -36,7 +39,7 @@ const SubagentsView: React.FC = () => {
 
   const fetchSubagents = () => {
     setLoading(true);
-    fetch('http://localhost:3008/api/subagents')
+    fetch(`${API_BASE}/subagents`)
       .then(res => res.json())
       .then(data => {
         setSubagents(data.subagents || []);
@@ -51,7 +54,7 @@ const SubagentsView: React.FC = () => {
   const handleAgentClick = (agent: Subagent) => {
     if (agent.is_dir) return;
     setActiveAgent(agent);
-    fetch(`http://localhost:3008/api/subagents/${agent.category}/${agent.name}`)
+    fetch(`${API_BASE}/subagents/${agent.category}/${agent.name}`)
       .then(res => res.json())
       .then(data => {
         // Defensive check: ensure structured exists
@@ -72,7 +75,7 @@ const SubagentsView: React.FC = () => {
     setSaving(true);
     
     // For now, always save the 'content' field which is the full markdown
-    fetch(`http://localhost:3008/api/subagents/${activeAgent.category}/${activeAgent.name}`, {
+    fetch(`${API_BASE}/subagents/${activeAgent.category}/${activeAgent.name}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: agentData.content })
@@ -121,6 +124,22 @@ const SubagentsView: React.FC = () => {
           <h2 data-testid="subagent-orchestrator" className="text-3xl font-bold text-[var(--text-bright)] tracking-tighter uppercase">SUBAGENT ORCHESTRATOR</h2>
           <p className="text-[10px] text-[var(--text-muted)] mt-1 uppercase tracking-[0.4em]">Subagent Division & Logic Control</p>
         </div>
+        <div className="flex bg-[var(--bg-surface)] p-1 rounded-lg border border-[var(--border-main)]">
+          <button 
+            onClick={() => setLayoutMode('grid')}
+            className={`px-4 py-1.5 text-[10px] font-bold rounded transition-all ${layoutMode === 'grid' ? 'bg-[var(--accent)] text-[var(--bg-main)]' : 'text-[var(--text-muted)] hover:text-[var(--text-bright)]'}`}
+            title="Card View"
+          >
+            GRID
+          </button>
+          <button 
+            onClick={() => setLayoutMode('list')}
+            className={`px-4 py-1.5 text-[10px] font-bold rounded transition-all ${layoutMode === 'list' ? 'bg-[var(--accent)] text-[var(--bg-main)]' : 'text-[var(--text-muted)] hover:text-[var(--text-bright)]'}`}
+            title="List View"
+          >
+            LIST
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -130,24 +149,44 @@ const SubagentsView: React.FC = () => {
           {categories.map(cat => (
             <div key={cat} className="space-y-4">
               <h3 className="text-[10px] font-bold text-[var(--accent)] tracking-[0.3em] uppercase border-b border-[var(--accent)]/20 pb-2">{cat} Division</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className={layoutMode === 'grid' ? "grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
                 {subagents.filter(s => s.category === cat).map(agent => (
                   <div 
                     key={agent.id}
                     data-testid={`agent-item-${agent.id}`}
                     onClick={() => handleAgentClick(agent)}
-                    className="bg-[var(--bg-surface)] border border-[var(--border-main)] p-5 rounded-lg hover:border-[var(--accent)]/40 transition-all cursor-pointer group relative overflow-hidden"
+                    className={layoutMode === 'grid' 
+                      ? "bg-[var(--bg-surface)] border border-[var(--border-main)] p-5 rounded-lg hover:border-[var(--accent)]/40 transition-all cursor-pointer group relative overflow-hidden" 
+                      : "bg-[var(--bg-surface)] border border-[var(--border-main)] py-3 px-5 flex items-center gap-6 rounded-lg hover:border-[var(--accent)]/40 transition-all cursor-pointer group relative overflow-hidden"}
                   >
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="w-8 h-8 bg-[var(--bg-surface)] rounded flex items-center justify-center text-[var(--text-muted)] font-bold text-xs group-hover:text-[var(--accent)] transition-colors">
-                        {agent.is_dir ? '📁' : '🧠'}
-                      </div>
-                      <div className="text-[8px] text-[var(--text-muted)] font-mono">{agent.id}</div>
-                    </div>
-                    <h4 className="text-sm font-bold text-[var(--text-bright)] uppercase tracking-wider">{agent.name}</h4>
-                    <p className="text-[10px] text-[var(--text-muted)] mt-2 leading-relaxed line-clamp-2">{agent.description}</p>
+                    {layoutMode === 'grid' ? (
+                      <>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="w-8 h-8 bg-[var(--bg-main)] rounded flex items-center justify-center text-[var(--text-muted)] font-bold text-xs group-hover:text-[var(--accent)] transition-colors">
+                            {agent.is_dir ? '📁' : '🧠'}
+                          </div>
+                          <div className="text-[8px] text-[var(--text-muted)] font-mono">{agent.id}</div>
+                        </div>
+                        <h4 className="text-sm font-bold text-[var(--text-bright)] uppercase tracking-wider">{agent.name}</h4>
+                        <p className="text-[10px] text-[var(--text-muted)] mt-2 leading-relaxed line-clamp-2">{agent.description}</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-8 h-8 bg-[var(--bg-main)] rounded flex items-center justify-center text-[var(--text-muted)] font-bold text-xs shrink-0 group-hover:text-[var(--accent)] transition-colors">
+                          {agent.is_dir ? '📁' : '🧠'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-bold text-[var(--text-bright)] uppercase tracking-wider truncate">{agent.name}</h4>
+                          <p className="text-[10px] text-[var(--text-muted)] leading-relaxed truncate">{agent.description || 'Neural Pathway Definition'}</p>
+                        </div>
+                        <div className="text-[8px] text-[var(--text-muted)] font-mono shrink-0">{agent.id}</div>
+                      </>
+                    )}
                     
-                    <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[var(--accent)]/0 to-transparent group-hover:via-[var(--accent)]/40 transition-all"></div>
+                    <div className={layoutMode === 'grid' 
+                      ? "absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[var(--accent)]/0 to-transparent group-hover:via-[var(--accent)]/40 transition-all" 
+                      : "absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[var(--accent)]/0 to-transparent group-hover:via-[var(--accent)]/40 transition-all"}>
+                    </div>
                   </div>
                 ))}
               </div>
