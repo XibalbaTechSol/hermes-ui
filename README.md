@@ -16,6 +16,12 @@
 - **Free Reasoning Bridge**: Dedicated Node.js MCP server that act as a proxy between Hermes and the local `gemini` CLI for zero-cost agentic tasks.
 - **Global Configuration**: Advanced settings for model selection (Gemini, OpenAI, etc.), Voice (STT/TTS), and multi-layer security (Secret redaction, PII shield).
 
+## 📸 Visual Overview
+
+| Dashboard Command Center | Neural Chat Interface | Visual Automation Graph |
+|:---:|:---:|:---:|
+| ![Dashboard](./src/assets/docs/dashboard.png) | ![Chat Interface](./src/assets/docs/chat.png) | ![Automation Graph](./src/assets/docs/graph.png) |
+
 ## 🟣 Free Reasoning Mode
 
 Hermes UI is optimized for cost-efficient development. It leverages a custom **Gemini CLI MCP Bridge** that routes inference through your existing `gemini` CLI (OAuth-based), bypassing traditional API costs.
