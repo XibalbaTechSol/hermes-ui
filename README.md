@@ -7,7 +7,7 @@
 ## 🚀 Core Features
 
 - **Neural Chat Interface**: A polished, OpenAI-inspired chat experience with full Markdown support, syntax highlighting, and persistent session management.
-- **Visual Automation Graph**: Design complex automation logic and neural loops using an interactive flow editor powered by `@xyflow/react`.
+- **Visual Automation Graph**: Design complex automation logic and neural loops using an interactive flow editor powered by `@xyflow/react`. Supports node editing, deletion, and **Trigger (Cron Job) management** with backend persistence.
 - **MCP Protocol Registry**: A dedicated interface to register, monitor, and configure Model Context Protocol servers.
 - **Telemetry Dashboard**: Real-time monitoring of system vitals (CPU, Memory, Uptime) and neural token usage/cost metrics.
 - **Sub-agent Orchestration**: Manage a fleet of specialized sub-agents (Backend, Frontend, Designer, etc.) with custom personalities and offloading policies.
@@ -61,12 +61,12 @@ Hermes UI acts as the visual layer for the Hermes ecosystem. It communicates wit
 Hermes UI features an end-to-end Automated QA and Visual Audit pipeline that ensures UI regressions and aesthetic drift are caught before deployment.
 
 - **Playwright Test Suite**: Automates interaction with every major view in the application, capturing high-fidelity screenshots (`tests/visual_audit.spec.ts`).
-- **Neural Visual Audit**: Leverages a local Gemini CLI instance (authenticated via OAuth to avoid API costs) to act as a world-class UI/UX designer, analyzing screenshots against "perfection" baselines and generating a markdown quality report (`scripts/llm_visual_audit.js`).
-- **Master Orchestration**: A single command spins up both frontend and backend servers, executes the Playwright interaction suite, runs the visual audit, and automatically shuts everything down.
+- **Neural Visual Audit**: Leverages a local Gemini CLI instance (authenticated via OAuth to avoid API costs) to act as a world-class UI/UX designer, analyzing screenshots against "perfection" baselines and generating a markdown quality report (`QA_Visual_Report.md`).
+- **Master Orchestration**: The `test_master.sh` script spins up both frontend and backend servers, executes the Playwright interaction suite, runs the visual audit, and automatically shuts everything down.
 
 **Running the QA Pipeline:**
 ```bash
-./scripts/run_full_qa.sh
+./test_master.sh
 ```
 *Note: Ensure your local `gemini` CLI is set up and authenticated before running the visual audit.*
 
